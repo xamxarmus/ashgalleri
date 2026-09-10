@@ -4,10 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, ShieldCheck, Heart } from 'lucide-react';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface Product {
   id: string;
@@ -24,6 +23,11 @@ export default function AshGalleriStore() {
 
   useEffect(() => {
     async function loadProducts() {
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.from('products').select('*');
       if (!error && data) {
         setProducts(data);
@@ -39,7 +43,7 @@ export default function AshGalleriStore() {
       {/* 1. Bar Promosi Teratas */}
       <div className="bg-[#6B705C] text-[#FDFBF7] px-4 py-2 text-center text-xs md:text-sm font-medium tracking-wide flex items-center justify-center gap-2">
         <Sparkles size={14} className="animate-pulse" />
-        <span>PROMOSI KHAS KOREAN COTTON: Percuma Penghantaran Sempena Pembukaan Butik Online! ✨</span>
+        <span>PROMOSI KHAS KOREAN COTTON: Percuma Penghantaran Sempena Pembukaan Butik Online!</span>
       </div>
 
       {/* 2. Header Butik */}
@@ -50,7 +54,7 @@ export default function AshGalleriStore() {
               Ash Galleri
             </h1>
             <span className="text-[10px] tracking-widest uppercase text-[#A5A58D]">
-              Korean Cotton Boutique 🌿
+              Korean Cotton Boutique
             </span>
           </div>
 
@@ -61,13 +65,13 @@ export default function AshGalleriStore() {
         </div>
       </header>
 
-      {/* 3. Hero Section - Butik Hangat, Mewah & Mesra Telefon */}
+      {/* 3. Hero Section */}
       <section className="relative px-5 py-8 md:py-16 max-w-6xl mx-auto">
         <div className="bg-gradient-to-br from-[#F7F2EC] via-[#F3ECE5] to-[#EAE0D5] rounded-3xl p-6 md:p-12 border border-[#E0D5C7] shadow-sm flex flex-col md:flex-row items-center gap-8">
           
           <div className="w-full md:w-1/2 space-y-4 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#B7B7A4]/20 border border-[#B7B7A4]/40 text-[#5F634F] text-xs font-semibold">
-              <Sparkles size={12} /> Koleksi Korea Cotton Asli Gred Premium 🌸
+              <Sparkles size={12} /> Koleksi Korea Cotton Asli Gred Premium
             </div>
 
             <h2 className="text-3xl md:text-5xl font-serif leading-tight text-[#2F3E46]">
@@ -102,7 +106,7 @@ export default function AshGalleriStore() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent flex items-end p-4">
                 <p className="text-white text-xs tracking-wider uppercase font-medium bg-black/30 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
-                  Korean Cotton Boutique Showcase ✨
+                  Korean Cotton Boutique Showcase
                 </p>
               </div>
             </div>
@@ -122,11 +126,11 @@ export default function AshGalleriStore() {
 
         {loading ? (
           <div className="text-center py-16 text-sm text-[#A5A58D] animate-pulse">
-            Memuatkan koleksi fabrik... ⏳
+            Memuatkan koleksi fabrik...
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-16 bg-[#F7F2EC] rounded-2xl border border-[#E8E1D9]">
-            <p className="text-sm text-[#7F836F]">Belum ada produk dimasukkan.</p>
+            <p className="text-sm text-[#7F836F]">Belum ada produk dimasukkan ke katalog butik.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -182,7 +186,7 @@ export default function AshGalleriStore() {
       {/* 5. Footer */}
       <footer className="mt-16 border-t border-[#E8E1D9] bg-[#F7F2EC] py-10 px-5 text-center text-xs text-[#8F9489] space-y-2">
         <p className="font-serif tracking-widest uppercase text-sm text-[#2F3E46] font-medium">Ash Galleri</p>
-        <p>© 2026 Ash Galleri • Korean Cotton Boutique. Hak Cipta Terpelihara. 🌸</p>
+        <p>© 2026 Ash Galleri • Korean Cotton Boutique. Hak Cipta Terpelihara.</p>
       </footer>
 
     </div>
