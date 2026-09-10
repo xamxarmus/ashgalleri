@@ -4,10 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, ShieldCheck, Heart } from 'lucide-react';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 interface Product {
   id: string;
   name: string;
@@ -23,17 +19,28 @@ export default function AshGalleriStore() {
 
   useEffect(() => {
     async function loadProducts() {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      // Elak ralat jika environment variable belum sah atau tiada https://
+      if (!url || !key || !url.startsWith('http')) {
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase.from('products').select('*');
-      if (!error && data) {
-        setProducts(data);
+      try {
+        const supabase = createClient(url, key);
+        const { data, error } = await supabase.from('products').select('*');
+        if (!error && data) {
+          setProducts(data);
+        }
+      } catch (err) {
+        console.error('Ralat memuatkan produk:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
+
     loadProducts();
   }, []);
 
@@ -115,7 +122,7 @@ export default function AshGalleriStore() {
         </div>
       </section>
 
-      {/* 4. Senarai Produk Butik */}
+      {/* 4. Senarai Produk */}
       <section id="koleksi" className="px-5 py-10 max-w-6xl mx-auto">
         <div className="text-center max-w-xl mx-auto mb-10 space-y-2">
           <h3 className="text-2xl md:text-3xl font-serif text-[#2F3E46]">Koleksi Pilihan Butik</h3>
