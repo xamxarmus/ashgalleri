@@ -36,13 +36,13 @@ export default function AshGalleriStore() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#3D3A37] font-sans antialiased selection:bg-[#EAE0D5]">
       
-      {/* Bar Promosi Atas */}
+      {/* 1. Bar Promosi Teratas */}
       <div className="bg-[#6B705C] text-[#FDFBF7] px-4 py-2 text-center text-xs md:text-sm font-medium tracking-wide flex items-center justify-center gap-2">
         <Sparkles size={14} className="animate-pulse" />
         <span>PROMOSI KHAS KOREAN COTTON: Percuma Penghantaran Sempena Pembukaan Butik Online! ✨</span>
       </div>
 
-      {/* Header Butik */}
+      {/* 2. Header Butik */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#FDFBF7]/90 border-b border-[#E8E1D9] px-5 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex flex-col">
@@ -61,17 +61,17 @@ export default function AshGalleriStore() {
         </div>
       </header>
 
-      {/* Hero Showcase (Interior Elegan & Mesra Telefon) */}
+      {/* 3. Hero Section - Butik Hangat, Mewah & Mesra Telefon */}
       <section className="relative px-5 py-8 md:py-16 max-w-6xl mx-auto">
         <div className="bg-gradient-to-br from-[#F7F2EC] via-[#F3ECE5] to-[#EAE0D5] rounded-3xl p-6 md:p-12 border border-[#E0D5C7] shadow-sm flex flex-col md:flex-row items-center gap-8">
           
           <div className="w-full md:w-1/2 space-y-4 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#B7B7A4]/20 border border-[#B7B7A4]/40 text-[#5F634F] text-xs font-semibold">
-              <Sparkles size={12} /> Koleksi Korea Cotton Gred Premium 🌸
+              <Sparkles size={12} /> Koleksi Korea Cotton Asli Gred Premium 🌸
             </div>
 
             <h2 className="text-3xl md:text-5xl font-serif leading-tight text-[#2F3E46]">
-              Sentuhan Lembut, Anggun & Eksklusif.
+              Sentuhan Lembut, Anggun &amp; Eksklusif.
             </h2>
 
             <p className="text-sm md:text-base text-[#6B705C] leading-relaxed">
@@ -89,7 +89,7 @@ export default function AshGalleriStore() {
 
             <div className="pt-4 flex items-center justify-center md:justify-start gap-4 text-xs text-[#7F836F]">
               <span className="flex items-center gap-1"><ShieldCheck size={14} /> 100% Cotton Sejuk</span>
-              <span className="flex items-center gap-1"><CheckCircle2 size={14} /> Bidang 45" & 60"</span>
+              <span className="flex items-center gap-1"><CheckCircle2 size={14} /> Bidang 45 dan 60 Inci</span>
             </div>
           </div>
 
@@ -111,7 +111,7 @@ export default function AshGalleriStore() {
         </div>
       </section>
 
-      {/* Katalog Produk */}
+      {/* 4. Senarai Produk Butik */}
       <section id="koleksi" className="px-5 py-10 max-w-6xl mx-auto">
         <div className="text-center max-w-xl mx-auto mb-10 space-y-2">
           <h3 className="text-2xl md:text-3xl font-serif text-[#2F3E46]">Koleksi Pilihan Butik</h3>
@@ -179,7 +179,7 @@ export default function AshGalleriStore() {
         )}
       </section>
 
-      {/* Footer */}
+      {/* 5. Footer */}
       <footer className="mt-16 border-t border-[#E8E1D9] bg-[#F7F2EC] py-10 px-5 text-center text-xs text-[#8F9489] space-y-2">
         <p className="font-serif tracking-widest uppercase text-sm text-[#2F3E46] font-medium">Ash Galleri</p>
         <p>© 2026 Ash Galleri • Korean Cotton Boutique. Hak Cipta Terpelihara. 🌸</p>
