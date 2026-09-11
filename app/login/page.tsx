@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Fungsi untuk tukar muka surat
 import { ArrowLeft, Lock, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
@@ -20,11 +22,17 @@ export default function LoginPage() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage('Ralat: E-mel atau kata laluan salah.');
-      else setMessage('Berjaya log masuk! Selamat datang ke Ash Galleri. 🌸');
+      else {
+        setMessage('Berjaya log masuk! Membawa anda ke butik... 🌸');
+        setTimeout(() => router.push('/'), 1500); // Redirect ke muka depan
+      }
     } else {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setMessage('Ralat: ' + error.message);
-      else setMessage('Pendaftaran berjaya! 🎉');
+      else {
+        setMessage('Pendaftaran berjaya! Membawa anda ke butik... 🎉');
+        setTimeout(() => router.push('/'), 1500); // Redirect ke muka depan
+      }
     }
     setLoading(false);
   };

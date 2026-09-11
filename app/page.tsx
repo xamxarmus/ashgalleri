@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, Heart, User, CreditCard } from 'lucide-react';
+import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, Heart, User, CreditCard, LogOut, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
@@ -17,14 +17,23 @@ interface Product {
 export default function AshGalleriStore() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null); // State untuk simpan data user
 
   useEffect(() => {
+    // 1. Semak siapa yang log masuk
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    // 2. Muat produk
     async function loadProducts() {
       try {
         const { data, error } = await supabase.from('products').select('*');
-        if (!error && data) {
-          setProducts(data);
-        }
+        if (!error && data) setProducts(data);
       } catch (err) {
         console.error('Ralat memuatkan produk:', err);
       } finally {
@@ -32,39 +41,60 @@ export default function AshGalleriStore() {
       }
     }
     loadProducts();
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#3D3A37] font-sans antialiased selection:bg-[#EAE0D5]">
       
-      {/* Bar Promosi Teratas */}
+      {/* Bar Promosi */}
       <div className="bg-[#6B705C] text-[#FDFBF7] px-4 py-2 text-center text-xs md:text-sm font-medium tracking-wide flex items-center justify-center gap-2">
         <Sparkles size={14} className="animate-pulse" />
-        <span>PROMOSI KHAS KOREAN COTTON: Percuma Penghantaran Sempena Pembukaan Butik Online!</span>
+        <span>PROMOSI KHAS KOREAN COTTON: Percuma Penghantaran Sempena Pembukaan Butik!</span>
       </div>
 
-      {/* Header Butik */}
+      {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#FDFBF7]/90 border-b border-[#E8E1D9] px-5 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-serif tracking-widest text-[#2F3E46] uppercase font-semibold">
-              Ash Galleri
-            </h1>
-            <span className="text-[10px] tracking-widest uppercase text-[#A5A58D]">
-              Korean Cotton Boutique
-            </span>
+            <h1 className="text-2xl md:text-3xl font-serif tracking-widest text-[#2F3E46] uppercase font-semibold">Ash Galleri</h1>
+            <span className="text-[10px] tracking-widest uppercase text-[#A5A58D]">Korean Cotton Boutique</span>
           </Link>
 
           <div className="flex items-center gap-3">
+            {/* Butang Rahsia Admin */}
+            {user?.email === 'ashgalleri@gmail.com' && (
+              <Link href="/admin" className="hidden sm:flex items-center gap-1 bg-[#2F3E46] hover:bg-[#1f292e] text-white px-3 py-2 rounded-full text-xs font-semibold transition-all">
+                <Settings size={14} /> Bilik Admin
+              </Link>
+            )}
+
             <button className="flex items-center gap-2 bg-[#DDBEA9]/40 hover:bg-[#DDBEA9]/60 px-4 py-2 rounded-full border border-[#DDBEA9] transition-all text-xs font-semibold text-[#5B4636]">
               <ShoppingBag size={16} />
               <span className="hidden sm:inline">Troli</span>
             </button>
             
-            {/* Ikon Log Masuk User/Admin */}
-            <Link href="/login" className="flex items-center justify-center p-2.5 rounded-full bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] transition-all shadow-sm">
-              <User size={18} />
-            </Link>
+            {user ? (
+              // Paparan jika sudah log masuk
+              <div className="flex items-center gap-2">
+                <Link href="/profile" className="flex items-center justify-center p-2.5 rounded-full bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] transition-all shadow-sm">
+                  <User size={18} />
+                </Link>
+                <button onClick={handleLogout} className="p-2.5 rounded-full text-[#A5A58D] hover:bg-red-50 hover:text-red-500 transition-all">
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              // Paparan jika belum log masuk
+              <Link href="/login" className="flex items-center justify-center p-2.5 rounded-full bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] transition-all shadow-sm">
+                <User size={18} />
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -76,9 +106,7 @@ export default function AshGalleriStore() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#B7B7A4]/20 border border-[#B7B7A4]/40 text-[#5F634F] text-xs font-semibold">
               <Sparkles size={12} /> Koleksi Korea Cotton Asli Gred Premium
             </div>
-            <h2 className="text-3xl md:text-5xl font-serif leading-tight text-[#2F3E46]">
-              Sentuhan Lembut, Anggun &amp; Eksklusif.
-            </h2>
+            <h2 className="text-3xl md:text-5xl font-serif leading-tight text-[#2F3E46]">Sentuhan Lembut, Anggun &amp; Eksklusif.</h2>
             <p className="text-sm md:text-base text-[#6B705C] leading-relaxed">
               Membawakan kehangatan butik Korean Cotton terus ke genggaman anda. Pilihan fabrik berkualiti tinggi dengan tekstur sejuk, motif flora lembut, dan tona warna pastel yang memikat.
             </p>
@@ -96,10 +124,9 @@ export default function AshGalleriStore() {
         </div>
       </section>
 
-      {/* Bahagian Katalog & Sidebar */}
+      {/* Bahagian Katalog */}
       <section id="koleksi" className="px-5 py-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
         
-        {/* Sidebar Kiri: All Product */}
         <aside className="w-full md:w-1/4">
           <div className="sticky top-24 bg-white p-5 rounded-2xl border border-[#E8E1D9] shadow-sm">
             <h3 className="text-lg font-serif text-[#2F3E46] mb-4 border-b border-[#E8E1D9] pb-3">Kategori Butik</h3>
@@ -114,17 +141,17 @@ export default function AshGalleriStore() {
           </div>
         </aside>
 
-        {/* Grid Produk Kanan */}
         <div className="w-full md:w-3/4">
-          <div className="mb-6">
-            <h3 className="text-2xl font-serif text-[#2F3E46]">Semua Produk</h3>
-            <p className="text-xs text-[#7F836F] mt-1">Koleksi fabrik Korean Cotton eksklusif dari Ash Galleri.</p>
+          <div className="mb-6 flex justify-between items-end">
+            <div>
+              <h3 className="text-2xl font-serif text-[#2F3E46]">Semua Produk</h3>
+              <p className="text-xs text-[#7F836F] mt-1">Koleksi fabrik Korean Cotton eksklusif dari Ash Galleri.</p>
+            </div>
+            {/* Tempat letak butang Sort harga nanti */}
           </div>
 
           {loading ? (
-            <div className="text-center py-16 text-sm text-[#A5A58D] animate-pulse">
-              Memuatkan koleksi fabrik...
-            </div>
+            <div className="text-center py-16 text-sm text-[#A5A58D] animate-pulse">Memuatkan koleksi fabrik...</div>
           ) : products.length === 0 ? (
             <div className="text-center py-16 bg-[#F7F2EC] rounded-2xl border border-[#E8E1D9]">
               <p className="text-sm text-[#7F836F]">Belum ada produk dimasukkan ke katalog butik.</p>
@@ -135,7 +162,13 @@ export default function AshGalleriStore() {
                 <div key={item.id} className="group bg-white rounded-2xl p-3 border border-[#EAE3DA] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                   <div>
                     <div className="relative aspect-square rounded-xl overflow-hidden bg-[#F3ECE5] mb-3">
-                      <img src={item.image_url || 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80'} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      {/* Kalau gambar rosak/tiada, kita tunjuk kotak kelabu biasa */}
+                      <img 
+                        src={item.image_url || 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80'} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80' }}
+                      />
                       <button className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm text-[#5B4636] hover:text-rose-500 transition-colors">
                         <Heart size={14} />
                       </button>
@@ -151,18 +184,11 @@ export default function AshGalleriStore() {
                     </div>
                   </div>
 
-                  {/* Butang Add to Cart & Pay Now (Stripe) - TELAH DIKEMASKINI */}
                   <div className="pt-3 mt-3 border-t border-[#F2ECE4] grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={() => alert('Sistem troli sedang dibina! Nanti produk ini akan masuk ke troli awak. 🛒')}
-                      className="bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold"
-                    >
+                    <button onClick={() => alert('Sistem troli sedang dibina! Nanti produk ini akan masuk ke troli awak. 🛒')} className="bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
                       <ShoppingBag size={14} /> Cart
                     </button>
-                    <button 
-                      onClick={() => alert('Sistem pembayaran Stripe akan diaktifkan tak lama lagi! 💳')}
-                      className="bg-[#6B705C] hover:bg-[#585C4B] text-white text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold"
-                    >
+                    <button onClick={() => alert('Sistem pembayaran Stripe akan diaktifkan tak lama lagi! 💳')} className="bg-[#6B705C] hover:bg-[#585C4B] text-white text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
                       <CreditCard size={14} /> Pay Now
                     </button>
                   </div>
@@ -173,7 +199,6 @@ export default function AshGalleriStore() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="mt-16 border-t border-[#E8E1D9] bg-[#F7F2EC] py-10 px-5 text-center text-xs text-[#8F9489] space-y-2">
         <p className="font-serif tracking-widest uppercase text-sm text-[#2F3E46] font-medium">Ash Galleri</p>
         <p>© 2026 Ash Galleri • Korean Cotton Boutique. Hak Cipta Terpelihara.</p>
