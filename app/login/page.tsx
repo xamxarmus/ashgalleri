@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true); // Penentu mod Log Masuk atau Daftar
+  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -18,15 +18,13 @@ export default function LoginPage() {
     setMessage('');
 
     if (isLogin) {
-      // Proses Log Masuk
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage('Ralat: E-mel atau kata laluan salah.');
       else setMessage('Berjaya log masuk! Selamat datang ke Ash Galleri. 🌸');
     } else {
-      // Proses Daftar Akaun Baru
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setMessage('Ralat: ' + error.message);
-      else setMessage('Pendaftaran berjaya! 🎉 (Nota: Kita akan matikan pengesahan e-mel sekejap lagi untuk mudahkan urusan)');
+      else setMessage('Pendaftaran berjaya! 🎉');
     }
     setLoading(false);
   };
@@ -59,7 +57,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 px-3 py-2.5 border border-[#E8E1D9] rounded-xl shadow-sm placeholder-[#A5A58D] focus:outline-none focus:ring-[#DDBEA9] focus:border-[#DDBEA9] sm:text-sm bg-[#FDFBF7]"
+                  className="appearance-none block w-full pl-10 px-3 py-3 border border-[#E8E1D9] rounded-xl shadow-sm placeholder-[#A5A58D] text-black font-bold focus:outline-none focus:ring-[#DDBEA9] focus:border-[#DDBEA9] sm:text-sm bg-white"
                   placeholder="anda@email.com"
                 />
               </div>
@@ -76,14 +74,14 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 px-3 py-2.5 border border-[#E8E1D9] rounded-xl shadow-sm placeholder-[#A5A58D] focus:outline-none focus:ring-[#DDBEA9] focus:border-[#DDBEA9] sm:text-sm bg-[#FDFBF7]"
+                  className="appearance-none block w-full pl-10 px-3 py-3 border border-[#E8E1D9] rounded-xl shadow-sm placeholder-[#A5A58D] text-black font-bold focus:outline-none focus:ring-[#DDBEA9] focus:border-[#DDBEA9] sm:text-sm bg-white"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
             {message && (
-              <div className={`p-3 rounded-xl text-sm text-center ${message.includes('Ralat') ? 'bg-red-50 text-red-600' : 'bg-[#EAE0D5] text-[#5B4636]'}`}>
+              <div className={`p-3 rounded-xl text-sm text-center font-medium ${message.includes('Ralat') ? 'bg-red-50 text-red-600' : 'bg-[#EAE0D5] text-[#5B4636]'}`}>
                 {message}
               </div>
             )}
@@ -101,11 +99,12 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <button
+              type="button"
               onClick={() => {
                 setIsLogin(!isLogin);
                 setMessage('');
               }}
-              className="text-sm text-[#8F9489] hover:text-[#5B4636] transition-colors"
+              className="text-sm font-medium text-[#8F9489] hover:text-[#5B4636] transition-colors"
             >
               {isLogin ? 'Belum ada akaun? Daftar di sini' : 'Sudah ada akaun? Log masuk sini'}
             </button>

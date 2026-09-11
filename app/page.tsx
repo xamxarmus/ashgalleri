@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, Heart, User, CreditCard } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase'; // Menggunakan jambatan Supabase kita
+import { supabase } from '@/lib/supabase';
 
 interface Product {
   id: string;
@@ -61,7 +61,7 @@ export default function AshGalleriStore() {
               <span className="hidden sm:inline">Troli</span>
             </button>
             
-            {/* Ikon Log Masuk User/Admin - Berjaya dipautkan! */}
+            {/* Ikon Log Masuk User/Admin */}
             <Link href="/login" className="flex items-center justify-center p-2.5 rounded-full bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] transition-all shadow-sm">
               <User size={18} />
             </Link>
@@ -151,12 +151,18 @@ export default function AshGalleriStore() {
                     </div>
                   </div>
 
-                  {/* Butang Add to Cart & Pay Now (Stripe) */}
+                  {/* Butang Add to Cart & Pay Now (Stripe) - TELAH DIKEMASKINI */}
                   <div className="pt-3 mt-3 border-t border-[#F2ECE4] grid grid-cols-2 gap-2">
-                    <button className="bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
+                    <button 
+                      onClick={() => alert('Sistem troli sedang dibina! Nanti produk ini akan masuk ke troli awak. 🛒')}
+                      className="bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold"
+                    >
                       <ShoppingBag size={14} /> Cart
                     </button>
-                    <button className="bg-[#6B705C] hover:bg-[#585C4B] text-white text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
+                    <button 
+                      onClick={() => alert('Sistem pembayaran Stripe akan diaktifkan tak lama lagi! 💳')}
+                      className="bg-[#6B705C] hover:bg-[#585C4B] text-white text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold"
+                    >
                       <CreditCard size={14} /> Pay Now
                     </button>
                   </div>
