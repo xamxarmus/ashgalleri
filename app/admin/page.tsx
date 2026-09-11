@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Trash2, Plus, ArrowLeft, Package } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Package, Upload } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -16,8 +16,8 @@ export default function AdminPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [stock, setStock] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     checkAdmin();
@@ -26,7 +26,6 @@ export default function AdminPage() {
 
   async function checkAdmin() {
     const { data: { session } } = await supabase.auth.getSession();
-    // Halau keluar kalau yang masuk tu bukan e-mel bos!
     if (session?.user?.email === 'ashgalleri@gmail.com') {
       setIsAdmin(true);
     } else {
@@ -43,12 +42,40 @@ export default function AdminPage() {
   async function handleAddProduct(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+
+    let finalImageUrl = '';
+
+    // Proses muat naik gambar ke Supabase Storage (kalau ada gambar dipilih)
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        alert('Ralat muat naik gambar: ' + uploadError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Dapatkan pautan (URL) awam untuk gambar yang baru dimuat naik
+      const { data: publicUrlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      finalImageUrl = publicUrlData.publicUrl;
+    }
+
+    // Masukkan data produk ke dalam database
     const { error } = await supabase.from('products').insert([
       {
         name,
         description,
         price: parseFloat(price),
-        image_url: imageUrl,
+        image_url: finalImageUrl,
         stock: parseInt(stock)
       }
     ]);
@@ -57,10 +84,14 @@ export default function AdminPage() {
       setName('');
       setDescription('');
       setPrice('');
-      setImageUrl('');
       setStock('');
+      setImageFile(null);
+      // Reset input fail secara manual
+      const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
       fetchProducts();
-      alert('Produk berjaya ditambah ke butik! 🎉');
+      alert('Produk dan gambar berjaya ditambah ke butik! 🎉');
     } else {
       alert('Ralat: ' + error.message);
     }
@@ -114,13 +145,25 @@ export default function AdminPage() {
                   <input required type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full px-3 py-2 border border-[#E8E1D9] rounded-xl text-sm focus:outline-none focus:ring-[#DDBEA9]" placeholder="50"/>
                 </div>
               </div>
+              
+              {/* Ini bahagian butang muat naik gambar yang baru! */}
               <div>
-                <label className="block text-xs font-semibold text-[#5B4636] mb-1">Pautan URL Gambar (Sementara)</label>
-                <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full px-3 py-2 border border-[#E8E1D9] rounded-xl text-sm focus:outline-none focus:ring-[#DDBEA9]" placeholder="https://..."/>
-                <p className="text-[10px] text-[#A5A58D] mt-1 font-medium">Sistem butang "Upload dari PC" akan kita bina selepas ini.</p>
+                <label className="block text-xs font-semibold text-[#5B4636] mb-1 flex items-center gap-1"><Upload size={14}/> Muat Naik Gambar</label>
+                <input 
+                  id="image-upload"
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setImageFile(e.target.files[0]);
+                    }
+                  }} 
+                  className="w-full px-3 py-2 border border-[#E8E1D9] rounded-xl text-sm focus:outline-none focus:ring-[#DDBEA9] bg-[#FDFBF7] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#EAE0D5] file:text-[#5B4636] hover:file:bg-[#DDBEA9] cursor-pointer" 
+                />
               </div>
+
               <button type="submit" disabled={loading} className="w-full bg-[#6B705C] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#585C4B] transition-all disabled:opacity-50 shadow-sm mt-2">
-                {loading ? 'Menyimpan...' : 'Simpan ke Butik'}
+                {loading ? 'Sila tunggu...' : 'Simpan ke Butik'}
               </button>
             </form>
           </div>
