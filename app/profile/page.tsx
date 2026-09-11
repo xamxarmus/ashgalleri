@@ -3,24 +3,24 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, User, ShoppingBag, LogOut, Save, Trash2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, User, ShoppingBag, LogOut, Save, Trash2, CheckCircle2, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isCheckingOut, setIsCheckingOut] = useState(false); // State baru untuk butang bayar
   const [user, setUser] = useState<any>(null);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [cartTotal, setCartTotal] = useState(0);
 
-  // Senarai Pilihan Gambar Avatar "Natural & Estetik"
   const presetAvatars = [
     'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
     'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-    'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=150&q=80', // Gambar Daun/Nature
+    'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=150&q=80', 
     'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
   ];
 
@@ -31,12 +31,11 @@ export default function ProfilePage() {
   async function loadData() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      router.push('/login'); // Kalau belum login, halau ke page login
+      router.push('/login'); 
       return;
     }
     setUser(session.user);
 
-    // 1. Dapatkan Profil
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
     if (profile) {
       setFullName(profile.full_name || '');
@@ -45,7 +44,6 @@ export default function ProfilePage() {
       setAvatarUrl(presetAvatars[0]);
     }
 
-    // 2. Dapatkan Senarai Troli
     const { data: cartData } = await supabase
       .from('cart')
       .select('*, product:products(*)')
@@ -57,7 +55,6 @@ export default function ProfilePage() {
       const total = cartData.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
       setCartTotal(total);
     }
-
     setLoading(false);
   }
 
@@ -69,7 +66,6 @@ export default function ProfilePage() {
       full_name: fullName,
       avatar_url: avatarUrl,
     });
-
     if (error) alert('Ralat simpan profil: ' + error.message);
     else alert('Profil berjaya dikemas kini! 🌸');
     setLoading(false);
@@ -77,12 +73,39 @@ export default function ProfilePage() {
 
   async function removeFromCart(cartId: string) {
     await supabase.from('cart').delete().eq('id', cartId);
-    loadData(); // Muat semula troli selepas buang barang
+    loadData(); 
   }
 
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/');
+  }
+
+  // FUNGSI BARU: Sambungan ke Stripe
+  async function handleCheckout() {
+    if (cartItems.length === 0) return;
+    setIsCheckingOut(true);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: cartItems }),
+      });
+
+      const data = await response.json();
+      
+      if (data.url) {
+        // Berjaya! Bawa pelanggan ke skrin kad kredit Stripe
+        window.location.href = data.url; 
+      } else {
+        alert('Ralat Stripe: ' + data.error);
+        setIsCheckingOut(false);
+      }
+    } catch (error) {
+      alert('Ralat menyambung ke bank.');
+      setIsCheckingOut(false);
+    }
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7] text-[#6B705C] animate-pulse font-serif text-xl">Menyiapkan bilik persalinan... 🌸</div>;
@@ -99,8 +122,6 @@ export default function ProfilePage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-5 py-8 flex flex-col md:flex-row gap-8">
-        
-        {/* Bahagian Profil Kiri (Maklumat & Avatar) */}
         <div className="w-full md:w-1/3">
           <div className="bg-white p-6 rounded-2xl border border-[#E8E1D9] shadow-sm sticky top-24">
             <div className="flex flex-col items-center mb-6">
@@ -134,19 +155,16 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
-
               <button type="submit" disabled={loading} className="w-full bg-[#DDBEA9] text-[#5B4636] py-3 rounded-xl text-sm font-bold hover:bg-[#cbb09d] transition-all flex items-center justify-center gap-2 shadow-sm">
                 <Save size={16}/> Simpan Profil
               </button>
             </form>
-
             <button onClick={handleLogout} className="w-full mt-4 bg-white border border-red-200 text-red-500 py-3 rounded-xl text-sm font-bold hover:bg-red-50 transition-all flex items-center justify-center gap-2">
               <LogOut size={16}/> Log Keluar
             </button>
           </div>
         </div>
 
-        {/* Bahagian Troli Kanan */}
         <div className="w-full md:w-2/3">
           <div className="bg-white p-6 md:p-8 rounded-2xl border border-[#E8E1D9] shadow-sm">
             <h2 className="text-2xl font-serif font-bold mb-6 flex items-center gap-3 text-[#2F3E46]">
@@ -157,8 +175,7 @@ export default function ProfilePage() {
               <div className="text-center py-16 bg-[#FDFBF7] rounded-2xl border-2 border-dashed border-[#E8E1D9]">
                 <ShoppingBag size={48} className="mx-auto text-[#DDBEA9] mb-4 opacity-50"/>
                 <p className="text-base font-medium text-[#5B4636]">Troli anda masih kosong, sedihnya! 🥺</p>
-                <p className="text-xs text-[#8F9489] mt-2 mb-6">Jom cuci mata dan pilih kain yang cantik-cantik.</p>
-                <Link href="/#koleksi" className="inline-flex items-center gap-2 bg-[#6B705C] text-white px-6 py-3 rounded-full text-sm font-bold hover:bg-[#585C4B] transition-all shadow-sm">
+                <Link href="/#koleksi" className="inline-flex mt-4 items-center gap-2 bg-[#6B705C] text-white px-6 py-3 rounded-full text-sm font-bold hover:bg-[#585C4B] transition-all shadow-sm">
                   Mula Membeli-belah
                 </Link>
               </div>
@@ -189,8 +206,13 @@ export default function ProfilePage() {
                     <h3 className="font-bold text-2xl text-[#6B705C]">RM {cartTotal.toFixed(2)}</h3>
                   </div>
                   
-                  <button className="w-full bg-[#6B705C] text-white py-4 rounded-xl text-base font-bold hover:bg-[#585C4B] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
-                    <ShoppingBag size={20}/> Teruskan Pembayaran (Stripe)
+                  {/* Butang Bayar Yang Dah Dihidupkan! */}
+                  <button 
+                    onClick={handleCheckout} 
+                    disabled={isCheckingOut}
+                    className="w-full bg-[#6B705C] text-white py-4 rounded-xl text-base font-bold hover:bg-[#585C4B] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50"
+                  >
+                    <CreditCard size={20}/> {isCheckingOut ? 'Menyambung ke Bank...' : 'Teruskan Pembayaran (Stripe)'}
                   </button>
                 </div>
               </div>
