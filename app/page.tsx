@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, Heart, User, CreditCard, LogOut, Settings } from 'lucide-react';
+import { ShoppingBag, Sparkles, CheckCircle2, ArrowRight, Heart, User, CreditCard, LogOut, Settings, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface Product {
@@ -15,12 +16,17 @@ interface Product {
 }
 
 export default function AshGalleriStore() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null); // State untuk simpan data user
+  const [user, setUser] = useState<any>(null);
+
+  // State untuk Sorting & Pagination (Standard Zalora!)
+  const [sortOrder, setSortOrder] = useState<string>('terbaru');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   useEffect(() => {
-    // 1. Semak siapa yang log masuk
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
@@ -29,13 +35,12 @@ export default function AshGalleriStore() {
       setUser(session?.user ?? null);
     });
 
-    // 2. Muat produk
     async function loadProducts() {
       try {
         const { data, error } = await supabase.from('products').select('*');
         if (!error && data) setProducts(data);
       } catch (err) {
-        console.error('Ralat memuatkan produk:', err);
+        console.error('Ralat:', err);
       } finally {
         setLoading(false);
       }
@@ -49,16 +54,47 @@ export default function AshGalleriStore() {
     await supabase.auth.signOut();
   };
 
+  // Fungsi Masukkan Barang Ke Troli
+  const handleAddToCart = async (productId: string) => {
+    if (!user) {
+      alert('Sila log masuk dahulu untuk masukkan barang ke troli. 🌸');
+      router.push('/login');
+      return;
+    }
+
+    const { error } = await supabase.from('cart').insert({
+      user_id: user.id,
+      product_id: productId,
+      quantity: 1
+    });
+
+    if (error) {
+      alert('Alamak, ada ralat: ' + error.message);
+    } else {
+      alert('🛒 Berjaya ditambah ke troli anda!');
+    }
+  };
+
+  // Logik Menyusun Harga (Sorting)
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sortOrder === 'rendah_tinggi') return a.price - b.price;
+    if (sortOrder === 'tinggi_rendah') return b.price - a.price;
+    return 0; // 'terbaru'
+  });
+
+  // Logik Muka Surat (Pagination)
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#3D3A37] font-sans antialiased selection:bg-[#EAE0D5]">
-      
-      {/* Bar Promosi */}
       <div className="bg-[#6B705C] text-[#FDFBF7] px-4 py-2 text-center text-xs md:text-sm font-medium tracking-wide flex items-center justify-center gap-2">
         <Sparkles size={14} className="animate-pulse" />
         <span>PROMOSI KHAS KOREAN COTTON: Percuma Penghantaran Sempena Pembukaan Butik!</span>
       </div>
 
-      {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#FDFBF7]/90 border-b border-[#E8E1D9] px-5 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex flex-col">
@@ -67,20 +103,18 @@ export default function AshGalleriStore() {
           </Link>
 
           <div className="flex items-center gap-3">
-            {/* Butang Rahsia Admin */}
             {user?.email === 'ashgalleri@gmail.com' && (
               <Link href="/admin" className="hidden sm:flex items-center gap-1 bg-[#2F3E46] hover:bg-[#1f292e] text-white px-3 py-2 rounded-full text-xs font-semibold transition-all">
                 <Settings size={14} /> Bilik Admin
               </Link>
             )}
 
-            <button className="flex items-center gap-2 bg-[#DDBEA9]/40 hover:bg-[#DDBEA9]/60 px-4 py-2 rounded-full border border-[#DDBEA9] transition-all text-xs font-semibold text-[#5B4636]">
+            <Link href="/profile" className="flex items-center gap-2 bg-[#DDBEA9]/40 hover:bg-[#DDBEA9]/60 px-4 py-2 rounded-full border border-[#DDBEA9] transition-all text-xs font-semibold text-[#5B4636]">
               <ShoppingBag size={16} />
               <span className="hidden sm:inline">Troli</span>
-            </button>
+            </Link>
             
             {user ? (
-              // Paparan jika sudah log masuk
               <div className="flex items-center gap-2">
                 <Link href="/profile" className="flex items-center justify-center p-2.5 rounded-full bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] transition-all shadow-sm">
                   <User size={18} />
@@ -90,7 +124,6 @@ export default function AshGalleriStore() {
                 </button>
               </div>
             ) : (
-              // Paparan jika belum log masuk
               <Link href="/login" className="flex items-center justify-center p-2.5 rounded-full bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] transition-all shadow-sm">
                 <User size={18} />
               </Link>
@@ -99,7 +132,6 @@ export default function AshGalleriStore() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="relative px-5 py-8 md:py-16 max-w-6xl mx-auto">
         <div className="bg-gradient-to-br from-[#F7F2EC] via-[#F3ECE5] to-[#EAE0D5] rounded-3xl p-6 md:p-12 border border-[#E0D5C7] shadow-sm flex flex-col md:flex-row items-center gap-8">
           <div className="w-full md:w-1/2 space-y-4 text-center md:text-left">
@@ -124,9 +156,7 @@ export default function AshGalleriStore() {
         </div>
       </section>
 
-      {/* Bahagian Katalog */}
       <section id="koleksi" className="px-5 py-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
-        
         <aside className="w-full md:w-1/4">
           <div className="sticky top-24 bg-white p-5 rounded-2xl border border-[#E8E1D9] shadow-sm">
             <h3 className="text-lg font-serif text-[#2F3E46] mb-4 border-b border-[#E8E1D9] pb-3">Kategori Butik</h3>
@@ -142,59 +172,95 @@ export default function AshGalleriStore() {
         </aside>
 
         <div className="w-full md:w-3/4">
-          <div className="mb-6 flex justify-between items-end">
+          <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
             <div>
               <h3 className="text-2xl font-serif text-[#2F3E46]">Semua Produk</h3>
-              <p className="text-xs text-[#7F836F] mt-1">Koleksi fabrik Korean Cotton eksklusif dari Ash Galleri.</p>
+              <p className="text-xs text-[#7F836F] mt-1">Menunjukkan {currentItems.length} daripada {products.length} item.</p>
             </div>
-            {/* Tempat letak butang Sort harga nanti */}
+            
+            {/* Butang Sort Harga */}
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-[#A5A58D]" />
+              <select 
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="bg-white border border-[#E8E1D9] text-[#5B4636] text-sm rounded-lg focus:ring-[#DDBEA9] focus:border-[#DDBEA9] block p-2 outline-none shadow-sm cursor-pointer"
+              >
+                <option value="terbaru">Terbaru & Popular</option>
+                <option value="rendah_tinggi">Harga: Rendah ke Tinggi</option>
+                <option value="tinggi_rendah">Harga: Tinggi ke Rendah</option>
+              </select>
+            </div>
           </div>
 
           {loading ? (
             <div className="text-center py-16 text-sm text-[#A5A58D] animate-pulse">Memuatkan koleksi fabrik...</div>
           ) : products.length === 0 ? (
-            <div className="text-center py-16 bg-[#F7F2EC] rounded-2xl border border-[#E8E1D9]">
+             <div className="text-center py-16 bg-[#F7F2EC] rounded-2xl border border-[#E8E1D9]">
               <p className="text-sm text-[#7F836F]">Belum ada produk dimasukkan ke katalog butik.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-              {products.map((item) => (
-                <div key={item.id} className="group bg-white rounded-2xl p-3 border border-[#EAE3DA] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="relative aspect-square rounded-xl overflow-hidden bg-[#F3ECE5] mb-3">
-                      {/* Kalau gambar rosak/tiada, kita tunjuk kotak kelabu biasa */}
-                      <img 
-                        src={item.image_url || 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80'} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80' }}
-                      />
-                      <button className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm text-[#5B4636] hover:text-rose-500 transition-colors">
-                        <Heart size={14} />
+            <>
+              {/* Grid Produk */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                {currentItems.map((item) => (
+                  <div key={item.id} className="group bg-white rounded-2xl p-3 border border-[#EAE3DA] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="relative aspect-square rounded-xl overflow-hidden bg-[#F3ECE5] mb-3">
+                        <img 
+                          src={item.image_url || 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80'} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=600&q=80' }}
+                        />
+                        <button className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm text-[#5B4636] hover:text-rose-500 transition-colors">
+                          <Heart size={14} />
+                        </button>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6B705C] bg-[#B7B7A4]/20 px-2 py-0.5 rounded-md inline-block mb-1">
+                        Korea Cotton
+                      </span>
+                      <h4 className="font-medium text-sm text-[#2F3E46] line-clamp-1">{item.name}</h4>
+                      <p className="text-xs text-[#8F9489] line-clamp-2 mt-1">{item.description}</p>
+                      <div className="mt-2">
+                        <span className="text-[10px] text-[#A5A58D] block">Harga / meter</span>
+                        <span className="text-base font-semibold text-[#5B4636]">RM {Number(item.price).toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 mt-3 border-t border-[#F2ECE4] grid grid-cols-2 gap-2">
+                      <button onClick={() => handleAddToCart(item.id)} className="bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
+                        <ShoppingBag size={14} /> Cart
+                      </button>
+                      <button onClick={() => alert('Sistem Stripe akan diaktifkan di Fasa Akhir! 💳')} className="bg-[#6B705C] hover:bg-[#585C4B] text-white text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
+                        <CreditCard size={14} /> Pay Now
                       </button>
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6B705C] bg-[#B7B7A4]/20 px-2 py-0.5 rounded-md inline-block mb-1">
-                      Korea Cotton
-                    </span>
-                    <h4 className="font-medium text-sm text-[#2F3E46] line-clamp-1">{item.name}</h4>
-                    <p className="text-xs text-[#8F9489] line-clamp-2 mt-1">{item.description}</p>
-                    <div className="mt-2">
-                      <span className="text-[10px] text-[#A5A58D] block">Harga / meter</span>
-                      <span className="text-base font-semibold text-[#5B4636]">RM {Number(item.price).toFixed(2)}</span>
-                    </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="pt-3 mt-3 border-t border-[#F2ECE4] grid grid-cols-2 gap-2">
-                    <button onClick={() => alert('Sistem troli sedang dibina! Nanti produk ini akan masuk ke troli awak. 🛒')} className="bg-[#EAE0D5] hover:bg-[#DDBEA9] text-[#5B4636] text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
-                      <ShoppingBag size={14} /> Cart
-                    </button>
-                    <button onClick={() => alert('Sistem pembayaran Stripe akan diaktifkan tak lama lagi! 💳')} className="bg-[#6B705C] hover:bg-[#585C4B] text-white text-[11px] py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all font-semibold">
-                      <CreditCard size={14} /> Pay Now
-                    </button>
-                  </div>
+              {/* Sistem Pagination (Muka Surat) */}
+              {totalPages > 1 && (
+                <div className="mt-10 flex justify-center items-center gap-4">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-full bg-white border border-[#E8E1D9] text-[#5B4636] hover:bg-[#FDFBF7] disabled:opacity-50 transition-all shadow-sm"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <span className="text-sm font-semibold text-[#2F3E46]">Muka surat {currentPage} dari {totalPages}</span>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-full bg-white border border-[#E8E1D9] text-[#5B4636] hover:bg-[#FDFBF7] disabled:opacity-50 transition-all shadow-sm"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </section>
