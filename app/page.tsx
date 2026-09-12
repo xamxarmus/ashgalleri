@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ShoppingBag, User, ArrowRight, Star } from 'lucide-react';
+import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
@@ -66,11 +66,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#3D3A37] font-sans scroll-smooth">
-      {/* NAVBAR DENGAN LOGO BARU */}
+      {/* NAVBAR DENGAN LOGO */}
       <header className="bg-white border-b border-[#E8E1D9] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            {/* INI KOD LOGO AWAK */}
             <img src="/logo.png" alt="Logo Ash Galleri" className="h-10 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform" />
             <span className="font-serif font-bold text-xl text-[#2F3E46] hidden sm:block tracking-wide">Ash Galleri</span>
           </Link>
@@ -157,10 +156,44 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* KOTAK ALAMAT & WAKTU OPERASI */}
+      <section className="max-w-6xl mx-auto px-5 pb-16">
+        <div className="bg-[#F7F2EC] p-8 md:p-10 rounded-3xl border border-[#E8E1D9] flex flex-col md:flex-row gap-8 justify-between items-center shadow-sm">
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-2xl font-serif font-bold text-[#2F3E46] mb-3">Kunjungi Butik Kami</h3>
+            <p className="text-[#5B4636] mb-5 text-sm md:text-base max-w-md">
+              Singgah ke butik fizikal kami untuk melihat dan merasai sendiri kualiti fabrik premium Ash Galleri secara dekat.
+            </p>
+            <div className="flex items-start gap-3 justify-center md:justify-start">
+              <MapPin className="text-[#6B705C] shrink-0 mt-1" size={20} />
+              <p className="text-[#5B4636] font-medium text-sm md:text-base">
+                Ash Galleri<br/>
+                459X+VXC Wakaf Bharu, Kelantan
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 bg-white p-6 md:p-8 rounded-2xl border border-[#E8E1D9] shadow-sm w-full md:w-auto">
+            <h4 className="font-bold text-[#2F3E46] text-lg flex items-center gap-2 mb-4 justify-center md:justify-start">
+              <Clock className="text-[#6B705C]" size={20} /> Waktu Operasi
+            </h4>
+            <ul className="space-y-3 text-sm md:text-base text-[#5B4636]">
+              <li className="flex justify-between border-b border-[#E8E1D9] pb-2">
+                <span>Sabtu - Khamis</span>
+                <span className="font-semibold text-[#6B705C]">10:00 Pagi - 6:00 Petang</span>
+              </li>
+              <li className="flex justify-between text-red-500 font-semibold pt-1">
+                <span>Jumaat</span>
+                <span>Tutup </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
-      <footer className="bg-white border-t border-[#E8E1D9] py-10 mt-10">
+      <footer className="bg-white border-t border-[#E8E1D9] py-10">
         <div className="max-w-6xl mx-auto px-5 text-center flex flex-col items-center">
-          {/* LOGO DI KAKI WEBSITE */}
           <img src="/logo.png" alt="Logo Ash Galleri" className="h-14 w-auto mb-4 hover:scale-110 transition-transform duration-300" />
           <p className="text-sm font-semibold text-[#8F9489]">© 2026 Ash Galleri. Hak Cipta Terpelihara.</p>
           <p className="text-xs text-[#A5A58D] mt-2">Dikuasakan dengan rekaan eksklusif.</p>
