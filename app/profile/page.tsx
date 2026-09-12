@@ -15,12 +15,13 @@ export default function ProfilePage() {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [cartTotal, setCartTotal] = useState(0);
 
+  // IDENTITI HAIWAN YANG COMEL (Kucing, Anjing, Musang, Panda, Burung Hantu)
   const presetAvatars = [
-    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-    'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=150&q=80', 
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
+    'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80',
+    'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=150&q=80',
+    'https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=150&q=80',
+    'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?auto=format&fit=crop&w=150&q=80', 
+    'https://images.unsplash.com/photo-1540324155974-7523202daa3f?auto=format&fit=crop&w=150&q=80',
   ];
 
   useEffect(() => { loadData(); }, []);
@@ -55,7 +56,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans pb-20">
-      <header className="bg-white border-b border-[#E9D5FF] px-5 py-4 sticky top-0 z-10">
+      <header className="bg-white border-b border-[#E9D5FF] px-5 py-4 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-[#9333EA] hover:text-[#6B21A8] transition-colors text-sm font-semibold">
             <ArrowLeft size={18} /> Kembali ke Butik
@@ -79,13 +80,13 @@ export default function ProfilePage() {
             <form onSubmit={saveProfile} className="space-y-5 border-t border-[#E9D5FF] pt-5">
               <div>
                 <label className="block text-xs font-semibold text-[#6B21A8] mb-1">Nama Panggilan</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full px-4 py-2.5 border border-[#E9D5FF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C084FC] bg-[#FCFAFF]"/>
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full px-4 py-2.5 border border-[#E9D5FF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C084FC] bg-[#FCFAFF]" placeholder="Cth: Cik Mawar"/>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#6B21A8] mb-2">Pilih Identiti</label>
+                <label className="block text-xs font-semibold text-[#6B21A8] mb-2">Pilih Identiti (Haiwan Comel)</label>
                 <div className="flex gap-3 flex-wrap justify-center bg-[#F3E8FF] p-3 rounded-xl border border-[#E9D5FF]">
                   {presetAvatars.map((url, idx) => (
-                    <img key={idx} src={url} onClick={() => setAvatarUrl(url)} className={`w-12 h-12 rounded-full cursor-pointer object-cover transition-all ${avatarUrl === url ? 'ring-4 ring-[#C084FC] scale-110 shadow-md' : 'ring-2 ring-transparent opacity-80 hover:opacity-100'}`} />
+                    <img key={idx} src={url} onClick={() => setAvatarUrl(url)} className={`w-12 h-12 rounded-full cursor-pointer object-cover transition-all duration-300 ${avatarUrl === url ? 'ring-4 ring-[#C084FC] scale-110 shadow-md' : 'ring-2 ring-transparent opacity-80 hover:opacity-100'}`} alt={`Haiwan ${idx + 1}`} />
                   ))}
                 </div>
               </div>
@@ -111,9 +112,9 @@ export default function ProfilePage() {
             ) : (
               <div className="space-y-4">
                 {cartItems.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-4 border border-[#E9D5FF] rounded-2xl bg-[#FCFAFF]">
+                  <div key={item.id} className="flex items-center justify-between p-4 border border-[#E9D5FF] rounded-2xl bg-[#FCFAFF] hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-5">
-                      <img src={item.product?.image_url} className="w-20 h-20 rounded-xl object-cover bg-white border border-[#E9D5FF]" />
+                      <img src={item.product?.image_url} className="w-20 h-20 rounded-xl object-cover bg-white border border-[#E9D5FF] shadow-sm" />
                       <div>
                         <h4 className="font-bold text-base text-[#3B0764] mb-1">{item.product?.name}</h4>
                         <p className="text-xs text-[#9333EA] bg-white px-2 py-1 rounded-md inline-block border border-[#E9D5FF]">RM {Number(item.product?.price).toFixed(2)} / meter</p>
