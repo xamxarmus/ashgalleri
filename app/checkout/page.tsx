@@ -12,8 +12,9 @@ export default function CheckoutPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [cartTotal, setCartTotal] = useState(0);
+  const [userId, setUserId] = useState('');
 
-  // Borang Alamat (Lengkap)
+  // Borang Alamat
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
@@ -31,6 +32,7 @@ export default function CheckoutPage() {
       router.push('/login');
       return;
     }
+    setUserId(session.user.id);
 
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
     if (profile) setFullName(profile.full_name || '');
@@ -45,15 +47,35 @@ export default function CheckoutPage() {
       const total = cartData.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
       setCartTotal(total);
     } else {
-      router.push('/profile'); // Kalau troli kosong, hantar balik
+      router.push('/profile');
     }
     setLoading(false);
   }
 
+  // FUNGSI BARU: Simpan alamat ke database sebelum pergi ke Stripe!
   async function handleProceedToPayment(e: React.FormEvent) {
     e.preventDefault();
     setIsCheckingOut(true);
 
+    const fullShippingAddress = `${address}, ${postcode} ${city}, ${state}`;
+
+    // 1. Simpan rekod pesanan (beserta alamat) ke dalam tabel 'orders'
+    const { error: orderError } = await supabase.from('orders').insert([{
+      user_id: userId,
+      customer_name: fullName,
+      customer_phone: phone,
+      shipping_address: fullShippingAddress,
+      cart_items: cartItems,
+      total_amount: cartTotal
+    }]);
+
+    if (orderError) {
+      alert('Ralat menyimpan pesanan: ' + orderError.message);
+      setIsCheckingOut(false);
+      return;
+    }
+
+    // 2. Jika selamat disimpan, baru pergi ke bank (Stripe)
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -89,8 +111,6 @@ export default function CheckoutPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-5 py-8 flex flex-col md:flex-row gap-8">
-        
-        {/* Borang Alamat Kiri */}
         <div className="w-full md:w-2/3">
           <div className="bg-white p-6 md:p-8 rounded-2xl border border-[#E8E1D9] shadow-sm">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#2F3E46]">
@@ -104,7 +124,7 @@ export default function CheckoutPage() {
               </div>
               
               <div>
-                <label className="block text-xs font-semibold text-[#5B4636] mb-1 flex items-center gap-1"><Phone size={14}/> Nombor Telefon</label>
+                <label className="block text-xs font-semibold text-[#5B4636] mb-1 flex items-center gap-1"><Phone size={14}/> Nombor Telefon (WhatsApp)</label>
                 <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-3 border border-[#E8E1D9] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#DDBEA9]" placeholder="Cth: 0123456789"/>
               </div>
 
@@ -148,7 +168,6 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Ringkasan Pesanan Kanan */}
         <div className="w-full md:w-1/3">
           <div className="bg-[#F7F2EC] p-6 rounded-2xl border border-[#E8E1D9] shadow-sm sticky top-24">
             <h3 className="font-serif font-bold text-lg text-[#2F3E46] mb-4">Ringkasan Pesanan</h3>
@@ -170,10 +189,6 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-[#8F9489]">Subtotal</span>
                 <span className="font-semibold text-[#2F3E46]">RM {cartTotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[#8F9489]">Penghantaran</span>
-                <span className="font-semibold text-emerald-600">Percuma</span>
               </div>
               <div className="flex justify-between items-center pt-2 mt-2 border-t border-[#E8E1D9]">
                 <span className="font-bold text-[#2F3E46]">Jumlah</span>
