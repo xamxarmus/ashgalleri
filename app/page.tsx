@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock } from 'lucide-react';
+import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
@@ -35,11 +35,8 @@ export default function HomePage() {
       router.push('/login');
       return;
     }
-
     setAddingToCart(product.id);
-    
     const { data: existingCart } = await supabase.from('cart').select('*').eq('user_id', user.id).eq('product_id', product.id).single();
-
     if (existingCart) {
       await supabase.from('cart').update({ quantity: existingCart.quantity + 1 }).eq('id', existingCart.id);
     } else {
@@ -51,6 +48,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth">
+      {/* NAVBAR */}
       <header className="bg-white border-b border-[#E9D5FF] sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center group">
@@ -58,6 +56,14 @@ export default function HomePage() {
           </Link>
           <div className="flex items-center gap-4 md:gap-6">
             <Link href="#koleksi" className="text-sm font-semibold text-[#6B21A8] hover:text-[#C084FC] transition-colors hidden md:block">Koleksi Terkini</Link>
+            
+            {/* BUTANG KHAS ADMIN (HANYA MUNCUL JIKA EMEL ADMIN LOG MASUK) */}
+            {user?.email === 'ashgalleri@gmail.com' && (
+              <Link href="/admin" className="flex items-center gap-1 text-sm font-bold text-white bg-[#3B0764] hover:bg-[#6B21A8] px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg">
+                <Shield size={16} /> <span className="hidden sm:inline">Bilik Admin</span>
+              </Link>
+            )}
+
             {user ? (
               <Link href="/profile" className="flex items-center gap-2 bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] px-4 py-2 rounded-full text-sm font-bold transition-all border border-[#E9D5FF]">
                 <ShoppingBag size={16} /> <span className="hidden sm:inline">Troli & Profil</span>
@@ -71,18 +77,35 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="relative bg-[#FDF4FF] overflow-hidden">
-        <div className="absolute inset-0 bg-black/5 z-0"></div>
-        <div className="max-w-6xl mx-auto px-5 py-20 md:py-32 relative z-10 flex flex-col items-center text-center">
-          <span className="bg-white/80 backdrop-blur-sm text-[#6B21A8] text-xs font-bold px-4 py-1.5 rounded-full mb-6 tracking-widest uppercase border border-[#E9D5FF]">Koleksi Eksklusif</span>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#3B0764] mb-6 leading-tight">Sentuhan Premium <br className="hidden md:block"/> Fabrik Cotton Terbaik.</h1>
-          <p className="text-base md:text-lg text-[#6B21A8] mb-10 max-w-2xl font-medium">Tingkatkan keanggunan gaya anda dengan koleksi fabrik berkualiti tinggi dari Ash Galleri. Moden, selesa, dan eksklusif.</p>
-          <Link href="#koleksi" className="bg-[#C084FC] text-white px-8 py-4 rounded-full font-bold hover:bg-[#A855F7] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 hover:-translate-y-1">
-            Mula Membeli-belah <ArrowRight size={18} />
-          </Link>
+      {/* HERO SECTION - REKAAN BARU (TEKS KIRI & GAMBAR PENUH) */}
+      <section className="relative min-h-[85vh] flex flex-col justify-end bg-[#3B0764]">
+        {/* Latar Belakang Gambar (Gambar Nombor 3) */}
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-bg.jpg" alt="Latar Belakang Koleksi Ash Galleri" className="w-full h-full object-cover opacity-90" />
+          {/* Efek gelap dari bawah ke atas supaya teks putih nampak jelas */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+        </div>
+
+        {/* Teks & Butang di Kiri Bawah */}
+        <div className="max-w-6xl mx-auto w-full px-5 py-16 relative z-10">
+          <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-4 leading-tight drop-shadow-lg">
+            New Arrivals. <br/>Koleksi Premium.
+          </h1>
+          <p className="text-base md:text-xl text-gray-200 mb-8 max-w-xl font-medium drop-shadow-md">
+            Tingkatkan keanggunan gaya anda dengan fabrik berkualiti tinggi dari Ash Galleri. Moden, selesa, dan eksklusif.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link href="#koleksi" className="bg-white text-[#3B0764] px-8 py-3.5 rounded-full text-sm md:text-base font-bold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl uppercase tracking-wider">
+              Beli Sekarang
+            </Link>
+            <Link href="#koleksi" className="bg-transparent border border-white text-white px-8 py-3.5 rounded-full text-sm md:text-base font-bold hover:bg-white/20 transition-all shadow-lg uppercase tracking-wider">
+              Lihat Koleksi
+            </Link>
+          </div>
         </div>
       </section>
 
+      {/* PRODUCT SECTION */}
       <section id="koleksi" className="max-w-6xl mx-auto px-5 py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-serif font-bold text-[#3B0764] mb-3">Koleksi Terkini</h2>
@@ -125,7 +148,6 @@ export default function HomePage() {
             <h3 className="text-2xl font-serif font-bold text-[#3B0764] mb-3">Kunjungi Butik Kami</h3>
             <p className="text-[#6B21A8] mb-5 text-sm md:text-base max-w-md">Singgah ke butik fizikal kami untuk melihat dan merasai sendiri kualiti fabrik secara dekat.</p>
             
-            {/* INI PAUTAN KE GOOGLE MAPS */}
             <a href="https://maps.google.com/?q=459X+VXC+Wakaf+Bharu,+Kelantan" target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#E9D5FF] hover:border-[#C084FC] hover:shadow-md transition-all group cursor-pointer text-left">
               <MapPin className="text-[#C084FC] shrink-0 mt-1 group-hover:text-[#A855F7] transition-colors" size={28} />
               <div>
