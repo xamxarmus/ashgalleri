@@ -45,7 +45,7 @@ export default function AdminPage() {
 
     let finalImageUrl = '';
 
-    // Proses muat naik gambar ke Supabase Storage (kalau ada gambar dipilih)
+    // Proses muat naik gambar ke Supabase Storage
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -61,7 +61,7 @@ export default function AdminPage() {
         return;
       }
 
-      // Dapatkan pautan (URL) awam untuk gambar yang baru dimuat naik
+      // Dapatkan pautan (URL) awam untuk gambar
       const { data: publicUrlData } = supabase.storage
         .from('product-images')
         .getPublicUrl(filePath);
@@ -86,7 +86,6 @@ export default function AdminPage() {
       setPrice('');
       setStock('');
       setImageFile(null);
-      // Reset input fail secara manual
       const fileInput = document.getElementById('image-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
       
@@ -98,10 +97,21 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  // FUNGSI DELETE YANG BAHARU DAN SELAMAT
   async function handleDelete(id: string) {
     if (window.confirm('Betul ke nak padam produk ni dari kedai?')) {
-      await supabase.from('products').delete().eq('id', id);
-      fetchProducts();
+      // 1. Buang dari troli pelanggan dulu supaya sistem tak kunci
+      await supabase.from('cart').delete().eq('product_id', id);
+      
+      // 2. Selepas selamat dikeluarkan dari troli, baru padam dari kedai
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      
+      if (error) {
+        alert('Ralat padam produk: ' + error.message);
+      } else {
+        alert('Produk berjaya dipadam! 🗑️');
+        fetchProducts(); // Refresh senarai
+      }
     }
   }
 
@@ -146,7 +156,6 @@ export default function AdminPage() {
                 </div>
               </div>
               
-              {/* Ini bahagian butang muat naik gambar yang baru! */}
               <div>
                 <label className="block text-xs font-semibold text-[#5B4636] mb-1 flex items-center gap-1"><Upload size={14}/> Muat Naik Gambar</label>
                 <input 
