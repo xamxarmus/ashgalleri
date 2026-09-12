@@ -3,13 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, User, ShoppingBag, LogOut, Save, Trash2, CheckCircle2, CreditCard } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, LogOut, Save, Trash2, CheckCircle2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [isCheckingOut, setIsCheckingOut] = useState(false); // State baru untuk butang bayar
   const [user, setUser] = useState<any>(null);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -81,34 +80,12 @@ export default function ProfilePage() {
     router.push('/');
   }
 
-  // FUNGSI BARU: Sambungan ke Stripe
-  async function handleCheckout() {
-    if (cartItems.length === 0) return;
-    setIsCheckingOut(true);
-
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cartItems }),
-      });
-
-      const data = await response.json();
-      
-      if (data.url) {
-        // Berjaya! Bawa pelanggan ke skrin kad kredit Stripe
-        window.location.href = data.url; 
-      } else {
-        alert('Ralat Stripe: ' + data.error);
-        setIsCheckingOut(false);
-      }
-    } catch (error) {
-      alert('Ralat menyambung ke bank.');
-      setIsCheckingOut(false);
-    }
+  // Bawa pelanggan ke muka surat Checkout
+  function handleProceedToCheckout() {
+    router.push('/checkout');
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7] text-[#6B705C] animate-pulse font-serif text-xl">Menyiapkan bilik persalinan... 🌸</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7] animate-pulse">Menyiapkan bilik persalinan... 🌸</div>;
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#3D3A37] font-sans pb-20">
@@ -184,7 +161,7 @@ export default function ProfilePage() {
                 {cartItems.map(item => (
                   <div key={item.id} className="flex items-center justify-between p-4 border border-[#E8E1D9] rounded-2xl hover:shadow-md transition-shadow bg-[#FDFBF7]">
                     <div className="flex items-center gap-5">
-                      <img src={item.product?.image_url || 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=150&q=80'} className="w-20 h-20 rounded-xl object-cover bg-white shadow-sm border border-[#EAE3DA]" />
+                      <img src={item.product?.image_url} className="w-20 h-20 rounded-xl object-cover bg-white shadow-sm border border-[#EAE3DA]" />
                       <div>
                         <h4 className="font-bold text-base text-[#2F3E46] mb-1">{item.product?.name}</h4>
                         <p className="text-xs text-[#8F9489] bg-white px-2 py-1 rounded-md inline-block border border-[#E8E1D9]">RM {Number(item.product?.price).toFixed(2)} / meter</p>
@@ -206,13 +183,11 @@ export default function ProfilePage() {
                     <h3 className="font-bold text-2xl text-[#6B705C]">RM {cartTotal.toFixed(2)}</h3>
                   </div>
                   
-                  {/* Butang Bayar Yang Dah Dihidupkan! */}
                   <button 
-                    onClick={handleCheckout} 
-                    disabled={isCheckingOut}
-                    className="w-full bg-[#6B705C] text-white py-4 rounded-xl text-base font-bold hover:bg-[#585C4B] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50"
+                    onClick={handleProceedToCheckout} 
+                    className="w-full bg-[#6B705C] text-white py-4 rounded-xl text-base font-bold hover:bg-[#585C4B] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                   >
-                    <CreditCard size={20}/> {isCheckingOut ? 'Menyambung ke Bank...' : 'Teruskan Pembayaran (Stripe)'}
+                    Proses Pembayaran (Checkout) <ArrowRight size={20}/>
                   </button>
                 </div>
               </div>
