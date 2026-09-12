@@ -1,121 +1,84 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Fungsi untuk tukar muka surat
-import { ArrowLeft, Lock, Mail } from 'lucide-react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
 
-  const handleAuth = async (e: React.FormEvent) => {
+  async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
 
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setMessage('Ralat: E-mel atau kata laluan salah.');
-      else {
-        setMessage('Berjaya log masuk! Membawa anda ke butik... 🌸');
-        setTimeout(() => router.push('/'), 1500); // Redirect ke muka depan
-      }
+      if (error) alert(error.message);
+      else router.push('/profile');
     } else {
       const { error } = await supabase.auth.signUp({ email, password });
-      if (error) setMessage('Ralat: ' + error.message);
+      if (error) alert(error.message);
       else {
-        setMessage('Pendaftaran berjaya! Membawa anda ke butik... 🎉');
-        setTimeout(() => router.push('/'), 1500); // Redirect ke muka depan
+        alert('Pendaftaran berjaya! Sila log masuk.');
+        setIsLogin(true);
       }
     }
     setLoading(false);
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-[#EAE0D5]">
+    <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/" className="flex items-center justify-center gap-2 text-sm text-[#6B705C] hover:text-[#5B4636] mb-6 transition-colors">
-          <ArrowLeft size={16} /> Kembali ke Butik
+        <Link href="/" className="flex justify-center items-center text-[#9333EA] hover:text-[#6B21A8] mb-6 transition-colors">
+          <ArrowLeft size={18} className="mr-2" /> Kembali ke Butik
         </Link>
-        <h2 className="text-center text-3xl font-serif font-semibold tracking-widest text-[#2F3E46] uppercase">
-          Ash Galleri
+        <h2 className="text-center text-3xl font-serif font-bold text-[#3B0764]">
+          {isLogin ? 'Log Masuk' : 'Daftar Akaun Baru'}
         </h2>
-        <p className="mt-2 text-center text-sm text-[#8F9489]">
-          {isLogin ? 'Log masuk ke akaun anda' : 'Daftar akaun baharu pelanggan'}
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-sm border border-[#E8E1D9] sm:rounded-3xl sm:px-10">
+        <div className="bg-white py-8 px-4 shadow-sm border border-[#E9D5FF] sm:rounded-3xl sm:px-10">
           <form className="space-y-6" onSubmit={handleAuth}>
             <div>
-              <label className="block text-sm font-medium text-[#5B4636]">Alamat E-mel</label>
+              <label className="block text-sm font-semibold text-[#6B21A8]">Emel</label>
               <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail size={16} className="text-[#A5A58D]" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 px-3 py-3 border border-[#E8E1D9] rounded-xl shadow-sm placeholder-[#A5A58D] text-black font-bold focus:outline-none focus:ring-[#DDBEA9] focus:border-[#DDBEA9] sm:text-sm bg-white"
-                  placeholder="anda@email.com"
-                />
+                <Mail className="absolute left-3 top-3 text-[#C084FC]" size={18} />
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="appearance-none block w-full pl-10 pr-3 py-2.5 border border-[#E9D5FF] rounded-xl shadow-sm placeholder-[#D8B4E2] focus:outline-none focus:ring-[#C084FC] focus:border-[#C084FC] sm:text-sm bg-[#FCFAFF]" placeholder="emel@anda.com" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#5B4636]">Kata Laluan</label>
+              <label className="block text-sm font-semibold text-[#6B21A8]">Kata Laluan</label>
               <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock size={16} className="text-[#A5A58D]" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 px-3 py-3 border border-[#E8E1D9] rounded-xl shadow-sm placeholder-[#A5A58D] text-black font-bold focus:outline-none focus:ring-[#DDBEA9] focus:border-[#DDBEA9] sm:text-sm bg-white"
-                  placeholder="••••••••"
-                />
+                <Lock className="absolute left-3 top-3 text-[#C084FC]" size={18} />
+                <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="appearance-none block w-full pl-10 pr-3 py-2.5 border border-[#E9D5FF] rounded-xl shadow-sm placeholder-[#D8B4E2] focus:outline-none focus:ring-[#C084FC] focus:border-[#C084FC] sm:text-sm bg-[#FCFAFF]" placeholder="••••••••" />
               </div>
             </div>
 
-            {message && (
-              <div className={`p-3 rounded-xl text-sm text-center font-medium ${message.includes('Ralat') ? 'bg-red-50 text-red-600' : 'bg-[#EAE0D5] text-[#5B4636]'}`}>
-                {message}
-              </div>
-            )}
-
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-[#6B705C] hover:bg-[#585C4B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6B705C] transition-all disabled:opacity-50"
-              >
-                {loading ? 'Sila tunggu...' : (isLogin ? 'Log Masuk' : 'Daftar Akaun')}
+              <button type="submit" disabled={loading} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#C084FC] hover:bg-[#A855F7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C084FC] transition-all disabled:opacity-50">
+                {loading ? 'Memproses...' : (isLogin ? 'Log Masuk' : 'Daftar Sekarang')}
               </button>
             </div>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setMessage('');
-              }}
-              className="text-sm font-medium text-[#8F9489] hover:text-[#5B4636] transition-colors"
-            >
-              {isLogin ? 'Belum ada akaun? Daftar di sini' : 'Sudah ada akaun? Log masuk sini'}
-            </button>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#E9D5FF]"></div></div>
+              <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-[#9333EA]">Atau</span></div>
+            </div>
+            <div className="mt-6 text-center">
+              <button onClick={() => setIsLogin(!isLogin)} className="text-sm font-bold text-[#A855F7] hover:text-[#3B0764] transition-colors">
+                {isLogin ? 'Belum ada akaun? Daftar di sini' : 'Sudah ada akaun? Log masuk'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

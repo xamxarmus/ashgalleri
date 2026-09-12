@@ -38,50 +38,32 @@ export default function HomePage() {
 
     setAddingToCart(product.id);
     
-    const { data: existingCart } = await supabase
-      .from('cart')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('product_id', product.id)
-      .single();
+    const { data: existingCart } = await supabase.from('cart').select('*').eq('user_id', user.id).eq('product_id', product.id).single();
 
     if (existingCart) {
-      await supabase
-        .from('cart')
-        .update({ quantity: existingCart.quantity + 1 })
-        .eq('id', existingCart.id);
+      await supabase.from('cart').update({ quantity: existingCart.quantity + 1 }).eq('id', existingCart.id);
     } else {
-      await supabase
-        .from('cart')
-        .insert([{
-          user_id: user.id,
-          product_id: product.id,
-          quantity: 1
-        }]);
+      await supabase.from('cart').insert([{ user_id: user.id, product_id: product.id, quantity: 1 }]);
     }
-
     setAddingToCart(null);
     alert(`${product.name} berjaya dimasukkan ke troli! 🛍️`);
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#3D3A37] font-sans scroll-smooth">
-      {/* NAVBAR DENGAN LOGO */}
-      <header className="bg-white border-b border-[#E8E1D9] sticky top-0 z-50">
+    <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth">
+      <header className="bg-white border-b border-[#E9D5FF] sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <img src="/logo.png" alt="Logo Ash Galleri" className="h-10 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform" />
-            <span className="font-serif font-bold text-xl text-[#2F3E46] hidden sm:block tracking-wide">Ash Galleri</span>
+          <Link href="/" className="flex items-center group">
+            <span className="font-serif font-bold text-2xl text-[#3B0764] tracking-wide group-hover:text-[#A855F7] transition-colors">Ash Galleri</span>
           </Link>
-          
           <div className="flex items-center gap-4 md:gap-6">
-            <Link href="#koleksi" className="text-sm font-semibold text-[#5B4636] hover:text-[#DDBEA9] transition-colors hidden md:block">Koleksi Terkini</Link>
+            <Link href="#koleksi" className="text-sm font-semibold text-[#6B21A8] hover:text-[#C084FC] transition-colors hidden md:block">Koleksi Terkini</Link>
             {user ? (
-              <Link href="/profile" className="flex items-center gap-2 bg-[#F7F2EC] hover:bg-[#EAE0D5] text-[#5B4636] px-4 py-2 rounded-full text-sm font-bold transition-all border border-[#E8E1D9]">
+              <Link href="/profile" className="flex items-center gap-2 bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] px-4 py-2 rounded-full text-sm font-bold transition-all border border-[#E9D5FF]">
                 <ShoppingBag size={16} /> <span className="hidden sm:inline">Troli & Profil</span>
               </Link>
             ) : (
-              <Link href="/login" className="flex items-center gap-2 bg-[#6B705C] hover:bg-[#585C4B] text-white px-5 py-2 rounded-full text-sm font-bold transition-all shadow-sm">
+              <Link href="/login" className="flex items-center gap-2 bg-[#C084FC] hover:bg-[#A855F7] text-white px-5 py-2 rounded-full text-sm font-bold transition-all shadow-sm">
                 <User size={16} /> Log Masuk
               </Link>
             )}
@@ -89,63 +71,43 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative bg-[#EAE0D5] overflow-hidden">
+      <section className="relative bg-[#FDF4FF] overflow-hidden">
         <div className="absolute inset-0 bg-black/5 z-0"></div>
         <div className="max-w-6xl mx-auto px-5 py-20 md:py-32 relative z-10 flex flex-col items-center text-center">
-          <span className="bg-white/80 backdrop-blur-sm text-[#5B4636] text-xs font-bold px-4 py-1.5 rounded-full mb-6 tracking-widest uppercase">Koleksi Eksklusif</span>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#2F3E46] mb-6 leading-tight">
-            Sentuhan Premium <br className="hidden md:block"/> Fabrik Cotton Terbaik.
-          </h1>
-          <p className="text-base md:text-lg text-[#5B4636] mb-10 max-w-2xl font-medium">
-            Tingkatkan keanggunan gaya anda dengan koleksi fabrik berkualiti tinggi dari Ash Galleri. Moden, selesa, dan eksklusif.
-          </p>
-          <Link href="#koleksi" className="bg-[#6B705C] text-white px-8 py-4 rounded-full font-bold hover:bg-[#585C4B] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 hover:-translate-y-1">
+          <span className="bg-white/80 backdrop-blur-sm text-[#6B21A8] text-xs font-bold px-4 py-1.5 rounded-full mb-6 tracking-widest uppercase border border-[#E9D5FF]">Koleksi Eksklusif</span>
+          <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#3B0764] mb-6 leading-tight">Sentuhan Premium <br className="hidden md:block"/> Fabrik Cotton Terbaik.</h1>
+          <p className="text-base md:text-lg text-[#6B21A8] mb-10 max-w-2xl font-medium">Tingkatkan keanggunan gaya anda dengan koleksi fabrik berkualiti tinggi dari Ash Galleri. Moden, selesa, dan eksklusif.</p>
+          <Link href="#koleksi" className="bg-[#C084FC] text-white px-8 py-4 rounded-full font-bold hover:bg-[#A855F7] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 hover:-translate-y-1">
             Mula Membeli-belah <ArrowRight size={18} />
           </Link>
         </div>
       </section>
 
-      {/* PRODUCT SECTION */}
       <section id="koleksi" className="max-w-6xl mx-auto px-5 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-serif font-bold text-[#2F3E46] mb-3">Koleksi Terkini</h2>
-          <p className="text-[#8F9489]">Pilihan fabrik cotton paling popular bulan ini.</p>
+          <h2 className="text-3xl font-serif font-bold text-[#3B0764] mb-3">Koleksi Terkini</h2>
+          <p className="text-[#9333EA]">Pilihan fabrik cotton paling popular bulan ini.</p>
         </div>
-
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B705C]"></div>
-          </div>
+          <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C084FC]"></div></div>
         ) : products.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-[#E8E1D9]">
-            <p className="text-[#8F9489]">Koleksi sedang dikemas kini. Sila kembali sebentar lagi! 🌸</p>
-          </div>
+          <div className="text-center py-20 bg-white rounded-3xl border border-[#E9D5FF]"><p className="text-[#9333EA]">Koleksi sedang dikemas kini. 🌸</p></div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl border border-[#E8E1D9] overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="relative aspect-[4/5] overflow-hidden bg-[#F7F2EC]">
-                  <img 
-                    src={product.image_url || 'https://via.placeholder.com/400'} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#5B4636]">
-                    <Star size={10} className="fill-[#DDBEA9] text-[#DDBEA9]"/> Premium
+              <div key={product.id} className="bg-white rounded-2xl border border-[#E9D5FF] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="relative aspect-[4/5] overflow-hidden bg-[#F3E8FF]">
+                  <img src={product.image_url || 'https://via.placeholder.com/400'} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#6B21A8]">
+                    <Star size={10} className="fill-[#D946EF] text-[#D946EF]"/> Premium
                   </div>
                 </div>
                 <div className="p-5">
-                  <h3 className="font-bold text-[#2F3E46] text-lg mb-1 truncate">{product.name}</h3>
-                  <p className="text-[#8F9489] text-xs mb-3 line-clamp-2 min-h-[2rem]">{product.description}</p>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#E8E1D9]">
-                    <span className="font-bold text-xl text-[#6B705C]">RM {Number(product.price).toFixed(2)}</span>
-                    <button 
-                      onClick={() => handleAddToCart(product)}
-                      disabled={addingToCart === product.id}
-                      className="bg-[#F7F2EC] hover:bg-[#DDBEA9] text-[#5B4636] p-2.5 rounded-xl transition-colors disabled:opacity-50"
-                      title="Tambah ke Troli"
-                    >
+                  <h3 className="font-bold text-[#3B0764] text-lg mb-1 truncate">{product.name}</h3>
+                  <p className="text-[#9333EA] text-xs mb-3 line-clamp-2 min-h-[2rem]">{product.description}</p>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#E9D5FF]">
+                    <span className="font-bold text-xl text-[#A855F7]">RM {Number(product.price).toFixed(2)}</span>
+                    <button onClick={() => handleAddToCart(product)} disabled={addingToCart === product.id} className="bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] p-2.5 rounded-xl transition-colors disabled:opacity-50">
                       <ShoppingBag size={18} />
                     </button>
                   </div>
@@ -156,47 +118,39 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* KOTAK ALAMAT & WAKTU OPERASI */}
+      {/* KOTAK ALAMAT BOLEH KLIK KE GOOGLE MAPS */}
       <section className="max-w-6xl mx-auto px-5 pb-16">
-        <div className="bg-[#F7F2EC] p-8 md:p-10 rounded-3xl border border-[#E8E1D9] flex flex-col md:flex-row gap-8 justify-between items-center shadow-sm">
+        <div className="bg-[#F3E8FF] p-8 md:p-10 rounded-3xl border border-[#E9D5FF] flex flex-col md:flex-row gap-8 justify-between items-center shadow-sm">
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-2xl font-serif font-bold text-[#2F3E46] mb-3">Kunjungi Butik Kami</h3>
-            <p className="text-[#5B4636] mb-5 text-sm md:text-base max-w-md">
-              Singgah ke butik fizikal kami untuk melihat dan merasai sendiri kualiti fabrik premium Ash Galleri secara dekat.
-            </p>
-            <div className="flex items-start gap-3 justify-center md:justify-start">
-              <MapPin className="text-[#6B705C] shrink-0 mt-1" size={20} />
-              <p className="text-[#5B4636] font-medium text-sm md:text-base">
-                Ash Galleri<br/>
-                459X+VXC Wakaf Bharu, Kelantan
-              </p>
-            </div>
+            <h3 className="text-2xl font-serif font-bold text-[#3B0764] mb-3">Kunjungi Butik Kami</h3>
+            <p className="text-[#6B21A8] mb-5 text-sm md:text-base max-w-md">Singgah ke butik fizikal kami untuk melihat dan merasai sendiri kualiti fabrik secara dekat.</p>
+            
+            {/* INI PAUTAN KE GOOGLE MAPS */}
+            <a href="https://maps.google.com/?q=459X+VXC+Wakaf+Bharu,+Kelantan" target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#E9D5FF] hover:border-[#C084FC] hover:shadow-md transition-all group cursor-pointer text-left">
+              <MapPin className="text-[#C084FC] shrink-0 mt-1 group-hover:text-[#A855F7] transition-colors" size={28} />
+              <div>
+                <p className="text-[#6B21A8] font-bold text-base group-hover:text-[#3B0764] transition-colors">Ash Galleri</p>
+                <p className="text-[#9333EA] text-sm mt-0.5">459X+VXC Wakaf Bharu, Kelantan</p>
+                <p className="text-[#C084FC] text-xs font-semibold mt-2 flex items-center gap-1 group-hover:underline">Buka di Google Maps <ArrowRight size={12}/></p>
+              </div>
+            </a>
           </div>
 
-          <div className="flex-1 bg-white p-6 md:p-8 rounded-2xl border border-[#E8E1D9] shadow-sm w-full md:w-auto">
-            <h4 className="font-bold text-[#2F3E46] text-lg flex items-center gap-2 mb-4 justify-center md:justify-start">
-              <Clock className="text-[#6B705C]" size={20} /> Waktu Operasi
-            </h4>
-            <ul className="space-y-3 text-sm md:text-base text-[#5B4636]">
-              <li className="flex justify-between border-b border-[#E8E1D9] pb-2">
-                <span>Sabtu - Khamis</span>
-                <span className="font-semibold text-[#6B705C]">10:00 Pagi - 6:00 Petang</span>
-              </li>
-              <li className="flex justify-between text-red-500 font-semibold pt-1">
-                <span>Jumaat</span>
-                <span>Tutup </span>
-              </li>
+          <div className="flex-1 bg-white p-6 md:p-8 rounded-2xl border border-[#E9D5FF] shadow-sm w-full md:w-auto">
+            <h4 className="font-bold text-[#3B0764] text-lg flex items-center gap-2 mb-4 justify-center md:justify-start"><Clock className="text-[#C084FC]" size={20} /> Waktu Operasi</h4>
+            <ul className="space-y-3 text-sm md:text-base text-[#6B21A8]">
+              <li className="flex justify-between border-b border-[#E9D5FF] pb-2"><span>Sabtu - Khamis</span><span className="font-semibold text-[#A855F7]">10:00 Pagi - 6:00 Petang</span></li>
+              <li className="flex justify-between text-red-500 font-semibold pt-1"><span>Jumaat</span><span>Tutup </span></li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-white border-t border-[#E8E1D9] py-10">
+      <footer className="bg-white border-t border-[#E9D5FF] py-10">
         <div className="max-w-6xl mx-auto px-5 text-center flex flex-col items-center">
-          <img src="/logo.png" alt="Logo Ash Galleri" className="h-14 w-auto mb-4 hover:scale-110 transition-transform duration-300" />
-          <p className="text-sm font-semibold text-[#8F9489]">© 2026 Ash Galleri. Hak Cipta Terpelihara.</p>
-          <p className="text-xs text-[#A5A58D] mt-2">Dikuasakan dengan rekaan eksklusif.</p>
+          <span className="font-serif font-bold text-3xl text-[#3B0764] mb-4 tracking-wider">Ash Galleri</span>
+          <p className="text-sm font-semibold text-[#9333EA]">© 2026 Ash Galleri. Hak Cipta Terpelihara.</p>
+          <p className="text-xs text-[#D8B4E2] mt-2">Dikuasakan dengan rekaan eksklusif.</p>
         </div>
       </footer>
     </div>
