@@ -48,7 +48,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth">
-      {/* NAVBAR */}
       <header className="bg-white border-b border-[#E9D5FF] sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center group">
@@ -57,7 +56,6 @@ export default function HomePage() {
           <div className="flex items-center gap-4 md:gap-6">
             <Link href="#koleksi" className="text-sm font-semibold text-[#6B21A8] hover:text-[#C084FC] transition-colors hidden md:block">Koleksi Terkini</Link>
             
-            {/* BUTANG KHAS ADMIN (HANYA MUNCUL JIKA EMEL ADMIN LOG MASUK) */}
             {user?.email === 'ashgalleri@gmail.com' && (
               <Link href="/admin" className="flex items-center gap-1 text-sm font-bold text-white bg-[#3B0764] hover:bg-[#6B21A8] px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg">
                 <Shield size={16} /> <span className="hidden sm:inline">Bilik Admin</span>
@@ -77,16 +75,12 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* HERO SECTION - REKAAN BARU (TEKS KIRI & GAMBAR PENUH) */}
       <section className="relative min-h-[85vh] flex flex-col justify-end bg-[#3B0764]">
-        {/* Latar Belakang Gambar (Gambar Nombor 3) */}
         <div className="absolute inset-0 z-0">
           <img src="/hero-bg.jpg" alt="Latar Belakang Koleksi Ash Galleri" className="w-full h-full object-cover opacity-90" />
-          {/* Efek gelap dari bawah ke atas supaya teks putih nampak jelas */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
         </div>
 
-        {/* Teks & Butang di Kiri Bawah */}
         <div className="max-w-6xl mx-auto w-full px-5 py-16 relative z-10">
           <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-4 leading-tight drop-shadow-lg">
             New Arrivals. <br/>Koleksi Premium.
@@ -105,7 +99,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PRODUCT SECTION */}
       <section id="koleksi" className="max-w-6xl mx-auto px-5 py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-serif font-bold text-[#3B0764] mb-3">Koleksi Terkini</h2>
@@ -119,18 +112,45 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
             {products.map((product) => (
               <div key={product.id} className="bg-white rounded-2xl border border-[#E9D5FF] overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="relative aspect-[4/5] overflow-hidden bg-[#F3E8FF]">
-                  <img src={product.image_url || 'https://via.placeholder.com/400'} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#6B21A8]">
+                
+                {/* CONTAINER GAMBAR DENGAN FUNGSI SLIDE */}
+                <div className="relative aspect-[4/5] bg-[#F3E8FF] overflow-hidden group/slider">
+                  <div className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    
+                    {/* Gambar 1 (Utama) */}
+                    <img src={product.image_url || 'https://via.placeholder.com/400'} alt={product.name} className="w-full h-full object-cover shrink-0 snap-center transition-transform duration-500 group-hover:scale-105" />
+                    
+                    {/* Gambar 2 (Pilihan) */}
+                    {product.image_url_2 && (
+                      <img src={product.image_url_2} alt={product.name + ' pandangan lain'} className="w-full h-full object-cover shrink-0 snap-center transition-transform duration-500 group-hover:scale-105" />
+                    )}
+                  </div>
+
+                  {/* Tag Premium */}
+                  <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#6B21A8] z-10 pointer-events-none">
                     <Star size={10} className="fill-[#D946EF] text-[#D946EF]"/> Premium
                   </div>
+
+                  {/* Titik Penunjuk kalau ada 2 gambar */}
+                  {product.image_url_2 && (
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/80 shadow-sm"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/40 shadow-sm"></div>
+                    </div>
+                  )}
+                  {product.image_url_2 && (
+                    <div className="absolute top-1/2 right-2 bg-black/30 text-white rounded-full p-1 opacity-0 group-hover/slider:opacity-100 transition-opacity z-10 pointer-events-none">
+                      <ArrowRight size={14}/>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="p-5">
                   <h3 className="font-bold text-[#3B0764] text-lg mb-1 truncate">{product.name}</h3>
                   <p className="text-[#9333EA] text-xs mb-3 line-clamp-2 min-h-[2rem]">{product.description}</p>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#E9D5FF]">
                     <span className="font-bold text-xl text-[#A855F7]">RM {Number(product.price).toFixed(2)}</span>
-                    <button onClick={() => handleAddToCart(product)} disabled={addingToCart === product.id} className="bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] p-2.5 rounded-xl transition-colors disabled:opacity-50">
+                    <button onClick={() => handleAddToCart(product)} disabled={addingToCart === product.id} className="bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] p-2.5 rounded-xl transition-colors disabled:opacity-50 z-20 relative">
                       <ShoppingBag size={18} />
                     </button>
                   </div>
@@ -141,7 +161,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* KOTAK ALAMAT BOLEH KLIK KE GOOGLE MAPS */}
       <section className="max-w-6xl mx-auto px-5 pb-16">
         <div className="bg-[#F3E8FF] p-8 md:p-10 rounded-3xl border border-[#E9D5FF] flex flex-col md:flex-row gap-8 justify-between items-center shadow-sm">
           <div className="flex-1 text-center md:text-left">

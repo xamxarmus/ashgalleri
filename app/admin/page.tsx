@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFile2, setImageFile2] = useState<File | null>(null); // State untuk gambar kedua
 
   useEffect(() => {
     checkAdmin();
@@ -45,20 +46,47 @@ export default function AdminPage() {
   async function handleAddProduct(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);
     let finalImageUrl = '';
+    let finalImageUrl2 = '';
 
+    // Muat naik gambar 1
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, imageFile);
+      const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, imageFile);
       if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(filePath);
+        const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
         finalImageUrl = publicUrlData.publicUrl;
       }
     }
 
-    const { error } = await supabase.from('products').insert([{ name, description, price: parseFloat(price), image_url: finalImageUrl, stock: parseInt(stock) }]);
-    if (!error) { setName(''); setDescription(''); setPrice(''); setStock(''); setImageFile(null); fetchProducts(); alert('Produk berjaya ditambah! 🎉'); }
+    // Muat naik gambar 2 (Jika ada)
+    if (imageFile2) {
+      const fileExt2 = imageFile2.name.split('.').pop();
+      const fileName2 = `${Math.random()}.${fileExt2}`;
+      const { error: uploadError2 } = await supabase.storage.from('product-images').upload(fileName2, imageFile2);
+      if (!uploadError2) {
+        const { data: publicUrlData2 } = supabase.storage.from('product-images').getPublicUrl(fileName2);
+        finalImageUrl2 = publicUrlData2.publicUrl;
+      }
+    }
+
+    // Simpan ke database
+    const { error } = await supabase.from('products').insert([{ 
+      name, 
+      description, 
+      price: parseFloat(price), 
+      image_url: finalImageUrl,
+      image_url_2: finalImageUrl2, // Data gambar kedua
+      stock: parseInt(stock) 
+    }]);
+
+    if (!error) { 
+      setName(''); setDescription(''); setPrice(''); setStock(''); setImageFile(null); setImageFile2(null); 
+      fetchProducts(); 
+      alert('Produk berjaya ditambah! 🎉'); 
+    } else {
+      alert('Ralat: ' + error.message);
+    }
     setLoading(false);
   }
 
@@ -127,7 +155,13 @@ export default function AdminPage() {
                   <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1">Harga (RM)</label><input required type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full px-3 py-2 border border-[#E9D5FF] rounded-xl text-sm focus:ring-[#C084FC] focus:outline-none focus:ring-2" /></div>
                   <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1">Stok</label><input required type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full px-3 py-2 border border-[#E9D5FF] rounded-xl text-sm focus:ring-[#C084FC] focus:outline-none focus:ring-2" /></div>
                 </div>
-                <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1"><Upload size={14} className="inline"/> Muat Naik Gambar</label><input type="file" accept="image/*" onChange={e => {if (e.target.files) setImageFile(e.target.files[0])}} className="w-full text-xs" /></div>
+                
+                {/* Bahagian Gambar 1 */}
+                <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1"><Upload size={14} className="inline"/> Gambar 1 (Utama)</label><input required type="file" accept="image/*" onChange={e => {if (e.target.files) setImageFile(e.target.files[0])}} className="w-full text-xs border border-[#E9D5FF] p-2 rounded-lg" /></div>
+                
+                {/* Bahagian Gambar 2 */}
+                <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1"><Upload size={14} className="inline"/> Gambar 2 (Pilihan)</label><input type="file" accept="image/*" onChange={e => {if (e.target.files) setImageFile2(e.target.files[0])}} className="w-full text-xs border border-[#E9D5FF] p-2 rounded-lg" /></div>
+
                 <button type="submit" disabled={loading} className="w-full bg-[#C084FC] text-white py-3 rounded-xl text-sm font-bold mt-2 hover:bg-[#A855F7] transition-all">Simpan ke Butik</button>
               </form>
             </div>
@@ -140,8 +174,9 @@ export default function AdminPage() {
                 {products.map(p => (
                   <div key={p.id} className="flex items-center justify-between p-3 border border-[#E9D5FF] rounded-xl hover:bg-[#FCFAFF] transition-colors">
                     <div className="flex items-center gap-4">
+                      {/* Papar gambar pertama sahaja di admin */}
                       <img src={p.image_url} className="w-14 h-14 rounded-lg object-cover bg-white border border-[#E9D5FF]" />
-                      <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock}m</p></div>
+                      <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock}m {p.image_url_2 && " | (2 Gambar)"}</p></div>
                     </div>
                     <button onClick={() => handleDelete(p.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={18}/></button>
                   </div>
