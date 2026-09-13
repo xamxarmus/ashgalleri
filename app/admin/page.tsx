@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Trash2, Plus, ArrowLeft, Package, Upload, ClipboardList, MapPin, Phone } from 'lucide-react';
+// Tambah CheckCircle2 untuk ikon status siap
+import { Trash2, Plus, ArrowLeft, Package, Upload, ClipboardList, MapPin, Phone, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -18,7 +19,7 @@ export default function AdminPage() {
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageFile2, setImageFile2] = useState<File | null>(null); // State untuk gambar kedua
+  const [imageFile2, setImageFile2] = useState<File | null>(null);
 
   useEffect(() => {
     checkAdmin();
@@ -48,7 +49,6 @@ export default function AdminPage() {
     let finalImageUrl = '';
     let finalImageUrl2 = '';
 
-    // Muat naik gambar 1
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -59,7 +59,6 @@ export default function AdminPage() {
       }
     }
 
-    // Muat naik gambar 2 (Jika ada)
     if (imageFile2) {
       const fileExt2 = imageFile2.name.split('.').pop();
       const fileName2 = `${Math.random()}.${fileExt2}`;
@@ -70,13 +69,12 @@ export default function AdminPage() {
       }
     }
 
-    // Simpan ke database
     const { error } = await supabase.from('products').insert([{ 
       name, 
       description, 
       price: parseFloat(price), 
       image_url: finalImageUrl,
-      image_url_2: finalImageUrl2, // Data gambar kedua
+      image_url_2: finalImageUrl2,
       stock: parseInt(stock) 
     }]);
 
@@ -120,24 +118,41 @@ export default function AdminPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {orders.map(order => (
-                <div key={order.id} className="p-4 border-2 border-[#E9D5FF] rounded-xl bg-[#FCFAFF]">
+                <div key={order.id} className="p-4 border-2 border-[#E9D5FF] rounded-xl bg-[#FCFAFF] shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-3 border-b border-[#E9D5FF] pb-3">
                     <div>
-                      <h3 className="font-bold text-[#3B0764]">{order.customer_name}</h3>
-                      <p className="text-xs text-[#9333EA] mt-1">{new Date(order.created_at).toLocaleDateString('ms-MY')} | <span className="text-amber-500 font-semibold">{order.status}</span></p>
+                      <h3 className="font-bold text-[#3B0764] uppercase">{order.customer_name}</h3>
+                      <p className="text-xs text-[#9333EA] mt-1 flex items-center gap-2">
+                        {new Date(order.created_at).toLocaleDateString('ms-MY')} | 
+                        {/* Tukar ke Pembayaran Selesai yang cantik dan hijau! */}
+                        <span className="text-emerald-500 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                          <CheckCircle2 size={12}/> Pembayaran Selesai
+                        </span>
+                      </p>
                     </div>
                     <span className="font-bold text-lg text-[#C084FC]">RM {order.total_amount}</span>
                   </div>
                   <div className="space-y-2 mb-3">
-                    <p className="text-sm flex items-start gap-2"><MapPin size={16} className="text-[#9333EA] shrink-0 mt-0.5"/> <span className="text-[#6B21A8]">{order.shipping_address}</span></p>
-                    <p className="text-sm flex items-center gap-2"><Phone size={16} className="text-[#9333EA]"/> <span className="text-[#6B21A8]">{order.customer_phone}</span></p>
+                    <p className="text-sm flex items-start gap-2"><MapPin size={16} className="text-[#9333EA] shrink-0 mt-0.5"/> <span className="text-[#6B21A8] leading-relaxed">{order.shipping_address}</span></p>
+                    <p className="text-sm flex items-center gap-2"><Phone size={16} className="text-[#9333EA]"/> <span className="text-[#6B21A8] font-semibold">{order.customer_phone}</span></p>
                   </div>
-                  <div className="bg-white p-3 rounded-lg border border-[#E9D5FF]">
-                    <p className="text-xs font-bold text-[#9333EA] mb-2">Barang Dipesan:</p>
-                    {order.cart_items.map((item: any, idx: number) => (
-                      <p key={idx} className="text-sm text-[#3B0764]">📦 {item.product.name} (x{item.quantity})</p>
-                    ))}
+                  
+                  {/* BAHAGIAN BARANG DIPESAN DENGAN GAMBAR 📸 */}
+                  <div className="bg-white p-3 rounded-xl border border-[#E9D5FF]">
+                    <p className="text-xs font-bold text-[#9333EA] mb-3">Barang Dipesan:</p>
+                    <div className="space-y-2">
+                      {order.cart_items.map((item: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-3 bg-[#F3E8FF] p-2 rounded-lg border border-[#E9D5FF]">
+                          <img src={item.product?.image_url} alt={item.product?.name} className="w-12 h-12 object-cover rounded-md bg-white border border-[#E9D5FF]" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-[#3B0764] line-clamp-1">{item.product?.name}</p>
+                            <p className="text-xs text-[#9333EA] font-semibold mt-0.5">Kuantiti: {item.quantity}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
+                  
                 </div>
               ))}
             </div>
@@ -155,13 +170,8 @@ export default function AdminPage() {
                   <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1">Harga (RM)</label><input required type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full px-3 py-2 border border-[#E9D5FF] rounded-xl text-sm focus:ring-[#C084FC] focus:outline-none focus:ring-2" /></div>
                   <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1">Stok</label><input required type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full px-3 py-2 border border-[#E9D5FF] rounded-xl text-sm focus:ring-[#C084FC] focus:outline-none focus:ring-2" /></div>
                 </div>
-                
-                {/* Bahagian Gambar 1 */}
                 <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1"><Upload size={14} className="inline"/> Gambar 1 (Utama)</label><input required type="file" accept="image/*" onChange={e => {if (e.target.files) setImageFile(e.target.files[0])}} className="w-full text-xs border border-[#E9D5FF] p-2 rounded-lg" /></div>
-                
-                {/* Bahagian Gambar 2 */}
                 <div><label className="block text-xs font-semibold text-[#6B21A8] mb-1"><Upload size={14} className="inline"/> Gambar 2 (Pilihan)</label><input type="file" accept="image/*" onChange={e => {if (e.target.files) setImageFile2(e.target.files[0])}} className="w-full text-xs border border-[#E9D5FF] p-2 rounded-lg" /></div>
-
                 <button type="submit" disabled={loading} className="w-full bg-[#C084FC] text-white py-3 rounded-xl text-sm font-bold mt-2 hover:bg-[#A855F7] transition-all">Simpan ke Butik</button>
               </form>
             </div>
@@ -174,7 +184,6 @@ export default function AdminPage() {
                 {products.map(p => (
                   <div key={p.id} className="flex items-center justify-between p-3 border border-[#E9D5FF] rounded-xl hover:bg-[#FCFAFF] transition-colors">
                     <div className="flex items-center gap-4">
-                      {/* Papar gambar pertama sahaja di admin */}
                       <img src={p.image_url} className="w-14 h-14 rounded-lg object-cover bg-white border border-[#E9D5FF]" />
                       <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock}m {p.image_url_2 && " | (2 Gambar)"}</p></div>
                     </div>
