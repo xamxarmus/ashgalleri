@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
+// Kita dah tukar apiVersion ke versi 2026 yang betul! 👇
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16', // Gunakan versi API Stripe yang disokong
+  apiVersion: '2026-08-26.dahlia' as any, 
 });
 
 export async function POST(req: Request) {
