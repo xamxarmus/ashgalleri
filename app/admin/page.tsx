@@ -13,7 +13,6 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State untuk form produk
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -21,7 +20,6 @@ export default function AdminPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageFile2, setImageFile2] = useState<File | null>(null);
 
-  // State untuk butang Double Tap (Selesai Pesanan)
   const [confirmCompleteId, setConfirmCompleteId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,31 +40,36 @@ export default function AdminPage() {
   }
 
   async function fetchOrders() {
-    // MAGIS DI SINI: Kita hanya tarik pesanan yang BELUM selesai sahaja
-    const { data } = await supabase.from('orders').select('*').neq('status', 'Selesai').order('created_at', { ascending: false });
-    if (data) setOrders(data);
+    // Kita panggil semua pesanan, dan tapis secara manual (lebih selamat!)
+    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    if (data) {
+      // Hanya simpan pesanan yang bukan berstatus 'Selesai'
+      const pesananAktif = data.filter((order) => order.status !== 'Selesai');
+      setOrders(pesananAktif);
+    }
     setLoading(false);
   }
 
-  // FUNGSI DOUBLE TAP PESANAN SELESAI
   async function handleCompleteOrder(orderId: string) {
     if (confirmCompleteId === orderId) {
-      // Tekanan kali kedua (Sahkan)
       setLoading(true);
+      
+      // Kemas kini di pangkalan data
       const { error } = await supabase.from('orders').update({ status: 'Selesai' }).eq('id', orderId);
+      
       if (!error) {
-        alert('Pesanan berjaya ditandakan selesai! Ia akan dikeluarkan dari senarai ini. 📦✨');
-        fetchOrders(); // Refresh senarai
+        // MAGIS TERUS GHAIB: Buang kotak pesanan ini dari skrin (UI) serta merta!
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+        alert('Mantap bos! Pesanan selesai dan dikeluarkan dari senarai. 📦✨');
       } else {
         alert('Ralat: ' + error.message);
       }
+      
       setConfirmCompleteId(null);
       setLoading(false);
     } else {
-      // Tekanan kali pertama (Minta pengesahan)
       setConfirmCompleteId(orderId);
-      // Butang akan kembali normal selepas 4 saat jika admin tak tekan kali kedua
-      setTimeout(() => setConfirmCompleteId(null), 4000); 
+      setTimeout(() => setConfirmCompleteId(null), 4000);
     }
   }
 
@@ -176,7 +179,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* BUTANG DOUBLE TAP (TANDAKAN SELESAI) */}
+                  {/* BUTANG DOUBLE TAP */}
                   <button 
                     onClick={() => handleCompleteOrder(order.id)}
                     className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
@@ -194,7 +197,6 @@ export default function AdminPage() {
                   {confirmCompleteId === order.id && (
                     <p className="text-[10px] text-center text-red-500 font-semibold mt-1">Tekan sekali lagi untuk sahkan.</p>
                   )}
-
                 </div>
               ))}
             </div>
