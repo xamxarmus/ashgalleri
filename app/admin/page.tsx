@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-// Tambah CheckCircle2 untuk ikon status siap
-import { Trash2, Plus, ArrowLeft, Package, Upload, ClipboardList, MapPin, Phone, CheckCircle2 } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Package, Upload, ClipboardList, MapPin, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -14,12 +13,16 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // State untuk form produk
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageFile2, setImageFile2] = useState<File | null>(null);
+
+  // State untuk butang Double Tap (Selesai Pesanan)
+  const [confirmCompleteId, setConfirmCompleteId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAdmin();
@@ -39,9 +42,32 @@ export default function AdminPage() {
   }
 
   async function fetchOrders() {
-    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    // MAGIS DI SINI: Kita hanya tarik pesanan yang BELUM selesai sahaja
+    const { data } = await supabase.from('orders').select('*').neq('status', 'Selesai').order('created_at', { ascending: false });
     if (data) setOrders(data);
     setLoading(false);
+  }
+
+  // FUNGSI DOUBLE TAP PESANAN SELESAI
+  async function handleCompleteOrder(orderId: string) {
+    if (confirmCompleteId === orderId) {
+      // Tekanan kali kedua (Sahkan)
+      setLoading(true);
+      const { error } = await supabase.from('orders').update({ status: 'Selesai' }).eq('id', orderId);
+      if (!error) {
+        alert('Pesanan berjaya ditandakan selesai! Ia akan dikeluarkan dari senarai ini. 📦✨');
+        fetchOrders(); // Refresh senarai
+      } else {
+        alert('Ralat: ' + error.message);
+      }
+      setConfirmCompleteId(null);
+      setLoading(false);
+    } else {
+      // Tekanan kali pertama (Minta pengesahan)
+      setConfirmCompleteId(orderId);
+      // Butang akan kembali normal selepas 4 saat jika admin tak tekan kali kedua
+      setTimeout(() => setConfirmCompleteId(null), 4000); 
+    }
   }
 
   async function handleAddProduct(e: React.FormEvent) {
@@ -70,20 +96,13 @@ export default function AdminPage() {
     }
 
     const { error } = await supabase.from('products').insert([{ 
-      name, 
-      description, 
-      price: parseFloat(price), 
-      image_url: finalImageUrl,
-      image_url_2: finalImageUrl2,
-      stock: parseInt(stock) 
+      name, description, price: parseFloat(price), 
+      image_url: finalImageUrl, image_url_2: finalImageUrl2, stock: parseInt(stock) 
     }]);
 
     if (!error) { 
       setName(''); setDescription(''); setPrice(''); setStock(''); setImageFile(null); setImageFile2(null); 
-      fetchProducts(); 
-      alert('Produk berjaya ditambah! 🎉'); 
-    } else {
-      alert('Ralat: ' + error.message);
+      fetchProducts(); alert('Produk berjaya ditambah! 🎉'); 
     }
     setLoading(false);
   }
@@ -111,54 +130,78 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-5 py-8 space-y-8">
+        
+        {/* BAHAGIAN PESANAN PELANGGAN */}
         <div className="bg-white p-6 rounded-2xl border border-[#E9D5FF] shadow-sm">
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#3B0764]"><ClipboardList size={20} className="text-[#C084FC]"/> Senarai Pesanan Pelanggan</h2>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#3B0764]"><ClipboardList size={20} className="text-[#C084FC]"/> Senarai Pesanan Pelanggan (Aktif)</h2>
           {orders.length === 0 ? (
-            <p className="text-sm text-[#9333EA] text-center py-4">Belum ada pesanan direkodkan.</p>
+            <div className="text-center py-8 bg-[#F3E8FF] rounded-xl border border-[#E9D5FF]">
+              <p className="text-sm font-semibold text-[#6B21A8]">Bagus! Semua pesanan telah disiapkan. 🌟</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {orders.map(order => (
-                <div key={order.id} className="p-4 border-2 border-[#E9D5FF] rounded-xl bg-[#FCFAFF] shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3 border-b border-[#E9D5FF] pb-3">
-                    <div>
-                      <h3 className="font-bold text-[#3B0764] uppercase">{order.customer_name}</h3>
-                      <p className="text-xs text-[#9333EA] mt-1 flex items-center gap-2">
-                        {new Date(order.created_at).toLocaleDateString('ms-MY')} | 
-                        {/* Tukar ke Pembayaran Selesai yang cantik dan hijau! */}
-                        <span className="text-emerald-500 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                          <CheckCircle2 size={12}/> Pembayaran Selesai
-                        </span>
-                      </p>
+                <div key={order.id} className="p-4 border-2 border-[#E9D5FF] rounded-xl bg-[#FCFAFF] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-3 border-b border-[#E9D5FF] pb-3">
+                      <div>
+                        <h3 className="font-bold text-[#3B0764] uppercase">{order.customer_name}</h3>
+                        <p className="text-xs text-[#9333EA] mt-1 flex items-center gap-2">
+                          {new Date(order.created_at).toLocaleDateString('ms-MY')} | 
+                          <span className="text-emerald-500 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                            <CheckCircle2 size={12}/> Pembayaran Selesai
+                          </span>
+                        </p>
+                      </div>
+                      <span className="font-bold text-lg text-[#C084FC]">RM {order.total_amount}</span>
                     </div>
-                    <span className="font-bold text-lg text-[#C084FC]">RM {order.total_amount}</span>
-                  </div>
-                  <div className="space-y-2 mb-3">
-                    <p className="text-sm flex items-start gap-2"><MapPin size={16} className="text-[#9333EA] shrink-0 mt-0.5"/> <span className="text-[#6B21A8] leading-relaxed">{order.shipping_address}</span></p>
-                    <p className="text-sm flex items-center gap-2"><Phone size={16} className="text-[#9333EA]"/> <span className="text-[#6B21A8] font-semibold">{order.customer_phone}</span></p>
-                  </div>
-                  
-                  {/* BAHAGIAN BARANG DIPESAN DENGAN GAMBAR 📸 */}
-                  <div className="bg-white p-3 rounded-xl border border-[#E9D5FF]">
-                    <p className="text-xs font-bold text-[#9333EA] mb-3">Barang Dipesan:</p>
-                    <div className="space-y-2">
-                      {order.cart_items.map((item: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-3 bg-[#F3E8FF] p-2 rounded-lg border border-[#E9D5FF]">
-                          <img src={item.product?.image_url} alt={item.product?.name} className="w-12 h-12 object-cover rounded-md bg-white border border-[#E9D5FF]" />
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-[#3B0764] line-clamp-1">{item.product?.name}</p>
-                            <p className="text-xs text-[#9333EA] font-semibold mt-0.5">Kuantiti: {item.quantity}</p>
+                    <div className="space-y-2 mb-3">
+                      <p className="text-sm flex items-start gap-2"><MapPin size={16} className="text-[#9333EA] shrink-0 mt-0.5"/> <span className="text-[#6B21A8] leading-relaxed">{order.shipping_address}</span></p>
+                      <p className="text-sm flex items-center gap-2"><Phone size={16} className="text-[#9333EA]"/> <span className="text-[#6B21A8] font-semibold">{order.customer_phone}</span></p>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-xl border border-[#E9D5FF] mb-4">
+                      <p className="text-xs font-bold text-[#9333EA] mb-3">Barang Dipesan:</p>
+                      <div className="space-y-2">
+                        {order.cart_items.map((item: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-3 bg-[#F3E8FF] p-2 rounded-lg border border-[#E9D5FF]">
+                            <img src={item.product?.image_url} alt={item.product?.name} className="w-12 h-12 object-cover rounded-md bg-white border border-[#E9D5FF]" />
+                            <div className="flex-1">
+                              <p className="text-sm font-bold text-[#3B0764] line-clamp-1">{item.product?.name}</p>
+                              <p className="text-xs text-[#9333EA] font-semibold mt-0.5">Kuantiti: {item.quantity}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  
+
+                  {/* BUTANG DOUBLE TAP (TANDAKAN SELESAI) */}
+                  <button 
+                    onClick={() => handleCompleteOrder(order.id)}
+                    className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                      confirmCompleteId === order.id 
+                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                      : 'bg-[#E9D5FF] hover:bg-[#C084FC] text-[#6B21A8] hover:text-white'
+                    }`}
+                  >
+                    {confirmCompleteId === order.id ? (
+                      <><AlertCircle size={18} /> Sahkan Pesanan Selesai & Pos?</>
+                    ) : (
+                      <><CheckCircle2 size={18} /> Tandakan Selesai Dihantar</>
+                    )}
+                  </button>
+                  {confirmCompleteId === order.id && (
+                    <p className="text-[10px] text-center text-red-500 font-semibold mt-1">Tekan sekali lagi untuk sahkan.</p>
+                  )}
+
                 </div>
               ))}
             </div>
           )}
         </div>
 
+        {/* BAHAGIAN TAMBAH PRODUK & INVENTORI */}
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/3">
             <div className="bg-white p-6 rounded-2xl border border-[#E9D5FF] shadow-sm">
