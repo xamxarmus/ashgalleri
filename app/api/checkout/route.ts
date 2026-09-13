@@ -1,44 +1,40 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-// Mengaktifkan enjin Stripe menggunakan Kunci Rahsia awak berserta versi "dahlia" 🌺
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-08-26.dahlia', 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2023-10-16', // Gunakan versi API Stripe yang disokong
 });
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    const { items } = body;
+    const { items } = await req.json();
+    const origin = req.headers.get('origin') || 'https://ashgalleri.com';
 
-    if (!items || items.length === 0) {
-      return NextResponse.json({ error: 'Troli kosong' }, { status: 400 });
-    }
-
-    // Tukar format barang dari troli awak ke format yang Stripe faham
     const lineItems = items.map((item: any) => ({
       price_data: {
-        currency: 'myr',
+        currency: 'myr', // Wajib MYR untuk FPX
         product_data: {
           name: item.product.name,
-          images: [item.product.image_url || 'https://via.placeholder.com/150'],
+          images: item.product.image_url ? [item.product.image_url] : [],
         },
-        unit_amount: Math.round(item.product.price * 100), // Stripe kira dalam sen, jadi darab 100
+        unit_amount: Math.round(item.product.price * 100),
       },
       quantity: item.quantity,
     }));
 
-    // Buka sesi resit pembayaran di Stripe
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      // MAGIS FPX & KAD: Tambah 'fpx' di sini! 
+      payment_method_types: ['card', 'fpx'], 
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${request.headers.get('origin')}/?success=true`, // Kalau berjaya bayar, balik ke muka depan
-      cancel_url: `${request.headers.get('origin')}/profile?canceled=true`, // Kalau batal, balik ke troli
+      // HALA TUJU SELEPAS BAYARAN: Pergi ke muka surat Success baru!
+      success_url: `${origin}/success`, 
+      cancel_url: `${origin}/checkout`,
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (error: any) {
+    console.error("Ralat Stripe:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
