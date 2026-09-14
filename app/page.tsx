@@ -238,6 +238,13 @@ export default function HomePage() {
       <footer className="bg-white border-t border-[#E9D5FF] py-10">
         <div className="max-w-6xl mx-auto px-5 text-center flex flex-col items-center">
           <span className="font-serif font-bold text-3xl text-[#3B0764] mb-4 tracking-wider">Ash Galleri</span>
+          
+          <div className="flex gap-4 mb-4">
+            <Link href="/policies" className="text-sm font-semibold text-[#6B21A8] hover:text-[#A855F7] transition-colors underline-offset-4 hover:underline">Polisi Pemulangan</Link>
+            <span className="text-[#E9D5FF]">|</span>
+            <Link href="/policies" className="text-sm font-semibold text-[#6B21A8] hover:text-[#A855F7] transition-colors underline-offset-4 hover:underline">Terma & Syarat</Link>
+          </div>
+
           <p className="text-sm font-semibold text-[#9333EA]">© 2026 Ash Galleri. Hak Cipta Terpelihara.</p>
           <p className="text-xs text-[#D8B4E2] mt-2">Dikuasakan dengan rekaan eksklusif.</p>
         </div>
