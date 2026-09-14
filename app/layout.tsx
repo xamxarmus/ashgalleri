@@ -54,7 +54,7 @@ export default function RootLayout({
 
         {/* BUTANG WHATSAPP TERAPUNG */}
         <a 
-          href="https://wa.me/60169009331" // TUKAR NOMBOR INI KEPADA NOMBOR BISNES AWAK
+          href="https://wa.me/60179504385" // TUKAR NOMBOR INI KEPADA NOMBOR BISNES AWAK
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-6 right-6 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 hover:bg-[#20BA56] transition-all z-[100] flex items-center justify-center border-2 border-white group"
