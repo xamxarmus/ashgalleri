@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Trash2, Plus, ArrowLeft, Package, Upload, ClipboardList, MapPin, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+// KITA IMPORT TOAST DI SINI JUGA! 🔔
+import toast from 'react-hot-toast';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -54,7 +56,10 @@ export default function AdminPage() {
       const { error } = await supabase.from('orders').update({ status: 'Selesai' }).eq('id', orderId);
       if (!error) {
         setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-        alert('Mantap bos! Pesanan selesai dan dikeluarkan dari senarai. 📦✨');
+        // MAGIS TOAST (BERJAYA KEMAS KINI PESANAN) 🟢
+        toast.success('Mantap bos! Pesanan selesai dan dikeluarkan dari senarai. 📦✨');
+      } else {
+        toast.error('Ralat: ' + error.message);
       }
       setConfirmCompleteId(null);
       setLoading(false);
@@ -96,15 +101,17 @@ export default function AdminPage() {
 
     if (!error) { 
       setName(''); setDescription(''); setPrice(''); setStock(''); setImageFile(null); setImageFile2(null); 
-      fetchProducts(); alert('Produk berjaya ditambah! 🎉'); 
+      fetchProducts(); 
+      // MAGIS TOAST (BERJAYA TAMBAH) 🟢
+      toast.success('Produk berjaya ditambah! 🎉'); 
+    } else {
+      toast.error('Ralat: ' + error.message);
     }
     setLoading(false);
   }
 
-  // FUNGSI BARU: Padam Produk & Gambar Serentak 🗑️✨
   async function handleDelete(product: any) {
     if (window.confirm('Betul ke nak padam produk ini sepenuhnya? (Gambar juga akan dibuang)')) {
-      // 1. Ekstrak nama fail dari URL gambar
       const imageUrl1 = product.image_url;
       const imageUrl2 = product.image_url_2;
       let filesToRemove = [];
@@ -118,19 +125,19 @@ export default function AdminPage() {
         filesToRemove.push(fileName2);
       }
 
-      // 2. Musnahkan gambar dari Supabase Storage
       if (filesToRemove.length > 0) {
         await supabase.storage.from('product-images').remove(filesToRemove);
       }
 
-      // 3. Buang produk dari troli pelanggan (supaya tak ralat)
       await supabase.from('cart').delete().eq('product_id', product.id);
       
-      // 4. Akhir sekali, buang maklumat produk dari database
       const { error } = await supabase.from('products').delete().eq('id', product.id);
       if (!error) { 
-        alert('Sapu bersih! Produk dan gambarnya telah dipadam sepenuhnya. 🧹✨'); 
+        // MAGIS TOAST (BERJAYA PADAM) 🟢
+        toast.success('Sapu bersih! Produk dan gambarnya telah dipadam sepenuhnya. 🧹✨'); 
         fetchProducts(); 
+      } else {
+        toast.error('Ralat: ' + error.message);
       }
     }
   }
@@ -151,7 +158,6 @@ export default function AdminPage() {
 
       <main className="max-w-6xl mx-auto px-5 py-8 space-y-8">
         
-        {/* BAHAGIAN PESANAN PELANGGAN */}
         <div className="bg-white p-6 rounded-2xl border border-[#E9D5FF] shadow-sm">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#3B0764]"><ClipboardList size={20} className="text-[#C084FC]"/> Senarai Pesanan Pelanggan (Aktif)</h2>
           {orders.length === 0 ? (
@@ -219,7 +225,6 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* BAHAGIAN TAMBAH PRODUK & INVENTORI */}
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/3">
             <div className="bg-white p-6 rounded-2xl border border-[#E9D5FF] shadow-sm">
@@ -248,7 +253,6 @@ export default function AdminPage() {
                       <img src={p.image_url} className="w-14 h-14 rounded-lg object-cover bg-white border border-[#E9D5FF]" />
                       <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock}m {p.image_url_2 && " | (2 Gambar)"}</p></div>
                     </div>
-                    {/* Fungsi Pemadaman Berganda dihantar di sini */}
                     <button onClick={() => handleDelete(p)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={18}/></button>
                   </div>
                 ))}

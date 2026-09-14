@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield, SlidersHorizontal, ZoomIn, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+// KITA IMPORT TOAST DI SINI! 🔔
+import toast from 'react-hot-toast';
 
 export default function HomePage() {
   const router = useRouter();
@@ -13,7 +15,6 @@ export default function HomePage() {
   const [user, setUser] = useState<any>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
-  // Fungsi baru: Sort By & Zoom
   const [sortBy, setSortBy] = useState('latest');
   const [zoomedProduct, setZoomedProduct] = useState<any>(null);
 
@@ -33,17 +34,16 @@ export default function HomePage() {
     setLoading(false);
   }
 
-  // Logik untuk menyusun produk (Sort By)
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === 'price-asc') return a.price - b.price;
     if (sortBy === 'price-desc') return b.price - a.price;
-    // Default: Terbaharu (latest)
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
   async function handleAddToCart(product: any) {
     if (!user) {
-      alert('Sila log masuk dahulu untuk membeli-belah! 🌸');
+      // MAGIS TOAST (RALAT) 🔴
+      toast.error('Sila log masuk dahulu untuk membeli-belah! 🌸');
       router.push('/login');
       return;
     }
@@ -55,12 +55,13 @@ export default function HomePage() {
       await supabase.from('cart').insert([{ user_id: user.id, product_id: product.id, quantity: 1 }]);
     }
     setAddingToCart(null);
-    alert(`${product.name} berjaya dimasukkan ke troli! 🛍️`);
+    
+    // MAGIS TOAST (BERJAYA) 🟢
+    toast.success(`${product.name} berjaya dimasukkan ke troli! 🛍️`);
   }
 
   return (
     <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth">
-      {/* KOTAK ZOOM GAMBAR (MODAL POPUP) */}
       {zoomedProduct && (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 transition-all opacity-100" onClick={() => setZoomedProduct(null)}>
           <button onClick={() => setZoomedProduct(null)} className="absolute top-6 right-6 text-white hover:text-[#C084FC] bg-white/10 p-2 rounded-full transition-colors z-50">
@@ -84,7 +85,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* NAVBAR */}
       <header className="bg-white border-b border-[#E9D5FF] sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center group">
@@ -110,7 +110,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
       <section className="relative min-h-[85vh] flex flex-col justify-end bg-[#3B0764]">
         <div className="absolute inset-0 z-0">
           <img src="/hero-bg.jpg" alt="Latar Belakang Koleksi Ash Galleri" className="w-full h-full object-cover opacity-90" />
@@ -134,10 +133,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PRODUCT SECTION */}
       <section id="koleksi" className="max-w-6xl mx-auto px-5 py-20">
-        
-        {/* HEADER & SORT BY DENGAN REKAAN KEMAS */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 border-b border-[#E9D5FF] pb-6 gap-4">
           <div className="text-left">
             <h2 className="text-3xl font-serif font-bold text-[#3B0764] mb-2">Koleksi Terkini</h2>
@@ -179,7 +175,6 @@ export default function HomePage() {
                     <Star size={10} className="fill-[#D946EF] text-[#D946EF]"/> Premium
                   </div>
 
-                  {/* BUTANG ZOOM KANTA PEMBESAR */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); setZoomedProduct(product); }}
                     className="absolute top-3 right-3 bg-white/90 p-2 rounded-full text-[#6B21A8] hover:text-[#A855F7] hover:bg-white shadow-sm z-20 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
