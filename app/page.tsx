@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield, SlidersHorizontal, ZoomIn, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-// KITA IMPORT TOAST DI SINI! 🔔
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
@@ -42,7 +41,6 @@ export default function HomePage() {
 
   async function handleAddToCart(product: any) {
     if (!user) {
-      // MAGIS TOAST (RALAT) 🔴
       toast.error('Sila log masuk dahulu untuk membeli-belah! 🌸');
       router.push('/login');
       return;
@@ -55,8 +53,6 @@ export default function HomePage() {
       await supabase.from('cart').insert([{ user_id: user.id, product_id: product.id, quantity: 1 }]);
     }
     setAddingToCart(null);
-    
-    // MAGIS TOAST (BERJAYA) 🟢
     toast.success(`${product.name} berjaya dimasukkan ke troli! 🛍️`);
   }
 
@@ -217,15 +213,18 @@ export default function HomePage() {
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-2xl font-serif font-bold text-[#3B0764] mb-3">Kunjungi Butik Kami</h3>
             <p className="text-[#6B21A8] mb-5 text-sm md:text-base max-w-md">Singgah ke butik fizikal kami untuk melihat dan merasai sendiri kualiti fabrik secara dekat.</p>
-            <a href="https://maps.google.com/?q=459X+VXC+Wakaf+Bharu,+Kelantan" target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#E9D5FF] hover:border-[#C084FC] hover:shadow-md transition-all group cursor-pointer text-left">
+            
+            {/* INI BAHAGIAN KOORDINAT GPS YANG BARU 📍 */}
+            <a href="https://maps.google.com/?q=6°07'11.1%22N+102°11'59.2%22E" target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#E9D5FF] hover:border-[#C084FC] hover:shadow-md transition-all group cursor-pointer text-left">
               <MapPin className="text-[#C084FC] shrink-0 mt-1 group-hover:text-[#A855F7] transition-colors" size={28} />
               <div>
                 <p className="text-[#6B21A8] font-bold text-base group-hover:text-[#3B0764] transition-colors">Ash Galleri</p>
-                <p className="text-[#9333EA] text-sm mt-0.5">459X+VXC Wakaf Bharu, Kelantan</p>
+                <p className="text-[#9333EA] text-sm mt-0.5">Wakaf Bharu, Kelantan <br/><span className="text-[11px] font-mono text-[#C084FC]">(6°07'11.1"N 102°11'59.2"E)</span></p>
                 <p className="text-[#C084FC] text-xs font-semibold mt-2 flex items-center gap-1 group-hover:underline">Buka di Google Maps <ArrowRight size={12}/></p>
               </div>
             </a>
           </div>
+          
           <div className="flex-1 bg-white p-6 md:p-8 rounded-2xl border border-[#E9D5FF] shadow-sm w-full md:w-auto">
             <h4 className="font-bold text-[#3B0764] text-lg flex items-center gap-2 mb-4 justify-center md:justify-start"><Clock className="text-[#C084FC]" size={20} /> Waktu Operasi</h4>
             <ul className="space-y-3 text-sm md:text-base text-[#6B21A8]">
