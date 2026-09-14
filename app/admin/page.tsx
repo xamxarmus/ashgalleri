@@ -40,10 +40,8 @@ export default function AdminPage() {
   }
 
   async function fetchOrders() {
-    // Kita panggil semua pesanan, dan tapis secara manual (lebih selamat!)
     const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (data) {
-      // Hanya simpan pesanan yang bukan berstatus 'Selesai'
       const pesananAktif = data.filter((order) => order.status !== 'Selesai');
       setOrders(pesananAktif);
     }
@@ -53,18 +51,11 @@ export default function AdminPage() {
   async function handleCompleteOrder(orderId: string) {
     if (confirmCompleteId === orderId) {
       setLoading(true);
-      
-      // Kemas kini di pangkalan data
       const { error } = await supabase.from('orders').update({ status: 'Selesai' }).eq('id', orderId);
-      
       if (!error) {
-        // MAGIS TERUS GHAIB: Buang kotak pesanan ini dari skrin (UI) serta merta!
         setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
         alert('Mantap bos! Pesanan selesai dan dikeluarkan dari senarai. 📦✨');
-      } else {
-        alert('Ralat: ' + error.message);
       }
-      
       setConfirmCompleteId(null);
       setLoading(false);
     } else {
@@ -110,11 +101,37 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleDelete(id: string) {
-    if (window.confirm('Betul ke nak padam produk ni?')) {
-      await supabase.from('cart').delete().eq('product_id', id);
-      const { error } = await supabase.from('products').delete().eq('id', id);
-      if (!error) { alert('Produk berjaya dipadam! 🗑️'); fetchProducts(); }
+  // FUNGSI BARU: Padam Produk & Gambar Serentak 🗑️✨
+  async function handleDelete(product: any) {
+    if (window.confirm('Betul ke nak padam produk ini sepenuhnya? (Gambar juga akan dibuang)')) {
+      // 1. Ekstrak nama fail dari URL gambar
+      const imageUrl1 = product.image_url;
+      const imageUrl2 = product.image_url_2;
+      let filesToRemove = [];
+
+      if (imageUrl1) {
+        const fileName1 = imageUrl1.substring(imageUrl1.lastIndexOf('/') + 1);
+        filesToRemove.push(fileName1);
+      }
+      if (imageUrl2) {
+        const fileName2 = imageUrl2.substring(imageUrl2.lastIndexOf('/') + 1);
+        filesToRemove.push(fileName2);
+      }
+
+      // 2. Musnahkan gambar dari Supabase Storage
+      if (filesToRemove.length > 0) {
+        await supabase.storage.from('product-images').remove(filesToRemove);
+      }
+
+      // 3. Buang produk dari troli pelanggan (supaya tak ralat)
+      await supabase.from('cart').delete().eq('product_id', product.id);
+      
+      // 4. Akhir sekali, buang maklumat produk dari database
+      const { error } = await supabase.from('products').delete().eq('id', product.id);
+      if (!error) { 
+        alert('Sapu bersih! Produk dan gambarnya telah dipadam sepenuhnya. 🧹✨'); 
+        fetchProducts(); 
+      }
     }
   }
 
@@ -179,7 +196,6 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* BUTANG DOUBLE TAP */}
                   <button 
                     onClick={() => handleCompleteOrder(order.id)}
                     className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
@@ -232,7 +248,8 @@ export default function AdminPage() {
                       <img src={p.image_url} className="w-14 h-14 rounded-lg object-cover bg-white border border-[#E9D5FF]" />
                       <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock}m {p.image_url_2 && " | (2 Gambar)"}</p></div>
                     </div>
-                    <button onClick={() => handleDelete(p.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={18}/></button>
+                    {/* Fungsi Pemadaman Berganda dihantar di sini */}
+                    <button onClick={() => handleDelete(p)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={18}/></button>
                   </div>
                 ))}
               </div>
