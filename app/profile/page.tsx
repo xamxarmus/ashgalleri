@@ -4,8 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Trash2, ShoppingBag, Package, CheckCircle2, Clock, LogOut, UserCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Trash2, ShoppingBag, Package, CheckCircle2, Clock, LogOut, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// SENARAI AVATAR HAIWAN COMEL 🐾
+const ANIMAL_AVATARS = ['🐱', '🐶', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🦉', '🦋', '🐧'];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -14,8 +17,13 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // State untuk kawal baris pesanan mana yang terbuka (Accordion)
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
+  // STATE UNTUK EDIT PROFIL 🎨
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [avatar, setAvatar] = useState('🐱');
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -28,25 +36,42 @@ export default function ProfilePage() {
       return;
     }
     setUser(session.user);
+    
+    // Tetapkan nilai awal profil jika ada
+    setNickname(session.user.user_metadata?.nickname || '');
+    setAvatar(session.user.user_metadata?.avatar || '🐱');
 
-    // 1. Tarik Data Troli
     const { data: cartData } = await supabase
       .from('cart')
       .select('*, product:products(*)')
       .eq('user_id', session.user.id);
-    
     if (cartData) setCartItems(cartData);
 
-    // 2. Tarik Data Sejarah Pesanan
     const { data: orderData } = await supabase
       .from('orders')
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false });
-    
     if (orderData) setOrders(orderData);
 
     setLoading(false);
+  }
+
+  // FUNGSI SIMPAN PROFIL 💾
+  async function handleSaveProfile() {
+    setSavingProfile(true);
+    const { data, error } = await supabase.auth.updateUser({
+      data: { nickname: nickname, avatar: avatar }
+    });
+
+    if (error) {
+      toast.error('Gagal kemas kini profil: ' + error.message);
+    } else {
+      toast.success('Profil berjaya dikemas kini! 🐾✨');
+      setUser(data.user);
+      setIsEditingProfile(false);
+    }
+    setSavingProfile(false);
   }
 
   async function removeFromCart(id: string) {
@@ -69,12 +94,11 @@ export default function ProfilePage() {
 
   const cartTotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
-  // Fungsi untuk buka/tutup details pesanan
   const toggleOrderDetails = (orderId: string) => {
     if (expandedOrderId === orderId) {
-      setExpandedOrderId(null); // Tutup jika dah terbuka
+      setExpandedOrderId(null);
     } else {
-      setExpandedOrderId(orderId); // Buka yang baru ditekan
+      setExpandedOrderId(orderId);
     }
   };
 
@@ -97,15 +121,82 @@ export default function ProfilePage() {
 
       <main className="max-w-4xl mx-auto px-5 py-8 space-y-6">
         
-        {/* MAKLUMAT PROFIL PENGGUNA (DIKEMBALIKAN!) 👤✨ */}
-        <section className="bg-white p-6 rounded-3xl border border-[#E9D5FF] shadow-sm flex items-center gap-5">
-          <div className="bg-[#F3E8FF] text-[#C084FC] p-3 rounded-full">
-            <UserCircle size={56} strokeWidth={1.5} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[#3B0764] mb-1">Selamat Datang!</h2>
-            <p className="text-[#6B21A8] font-medium text-sm md:text-base bg-[#FCFAFF] px-3 py-1 rounded-lg border border-[#E9D5FF] inline-block">{user?.email}</p>
-          </div>
+        {/* BAHAGIAN PROFIL & AVATAR HAIWAN 🐾 */}
+        <section className="bg-white p-6 rounded-3xl border border-[#E9D5FF] shadow-sm relative">
+          
+          {isEditingProfile ? (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <h3 className="font-bold text-lg text-[#3B0764]">Edit Profil Saya 🎨</h3>
+              
+              <div>
+                <label className="text-xs font-bold text-[#6B21A8] block mb-2">1. Pilih Avatar Haiwan Anda:</label>
+                <div className="flex flex-wrap gap-2">
+                  {ANIMAL_AVATARS.map((emoji) => (
+                    <button 
+                      key={emoji} 
+                      onClick={() => setAvatar(emoji)}
+                      className={`text-3xl p-2.5 rounded-2xl transition-all ${
+                        avatar === emoji 
+                        ? 'bg-[#F3E8FF] border-2 border-[#C084FC] scale-110 shadow-sm' 
+                        : 'border-2 border-transparent hover:bg-gray-50'
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#6B21A8] block mb-2">2. Nama Panggilan (Nickname):</label>
+                <input 
+                  type="text" 
+                  value={nickname} 
+                  onChange={e => setNickname(e.target.value)} 
+                  placeholder="Cth: Cikgu Bunga"
+                  className="w-full md:w-1/2 px-4 py-3 border border-[#E9D5FF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C084FC] text-[#3B0764] font-semibold" 
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={handleSaveProfile} 
+                  disabled={savingProfile}
+                  className="bg-[#C084FC] hover:bg-[#A855F7] text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50"
+                >
+                  {savingProfile ? 'Menyimpan...' : 'Simpan Profil'}
+                </button>
+                <button 
+                  onClick={() => setIsEditingProfile(false)} 
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-bold transition-all"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+              <button 
+                onClick={() => setIsEditingProfile(true)}
+                className="absolute top-6 right-6 text-[#9333EA] hover:text-[#A855F7] bg-[#F3E8FF] p-2 rounded-full transition-colors"
+                title="Edit Profil"
+              >
+                <Edit2 size={18} />
+              </button>
+
+              <div className="text-6xl bg-gradient-to-br from-[#F3E8FF] to-[#E9D5FF] w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-md">
+                {user?.user_metadata?.avatar || '🐱'}
+              </div>
+              <div className="mt-2 sm:mt-1">
+                <h2 className="text-2xl font-bold text-[#3B0764] mb-1">
+                  {user?.user_metadata?.nickname || 'Selamat Datang!'}
+                </h2>
+                <p className="text-[#6B21A8] font-medium text-sm bg-[#FCFAFF] px-3 py-1 rounded-lg border border-[#E9D5FF] inline-block mt-1">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* TROLI MEMBELI-BELAH */}
