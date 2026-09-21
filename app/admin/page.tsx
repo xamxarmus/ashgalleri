@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Trash2, ArrowLeft, Package, Edit2, X, Image as ImageIcon } from 'lucide-react';
+import { Trash2, ArrowLeft, Package, Edit2, X, Image as ImageIcon, MessageSquareHeart } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -22,9 +22,7 @@ export default function AdminPage() {
 
   const [confirmCompleteId, setConfirmCompleteId] = useState<string | null>(null);
 
-  // ==========================================
-  // STATE BARU KHAS UNTUK FUNGSI EDIT PRODUK ✏️
-  // ==========================================
+  // STATE UNTUK FUNGSI EDIT PRODUK ✏️
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -33,10 +31,19 @@ export default function AdminPage() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // ==========================================
+  // STATE BARU: PENGURUSAN CUSTOMER REVIEW 💬
+  // ==========================================
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewName, setReviewName] = useState('');
+  const [reviewText, setReviewText] = useState('');
+  const [reviewRating, setReviewRating] = useState('5');
+
   useEffect(() => {
     checkAdmin();
     fetchProducts();
     fetchOrders();
+    fetchReviews(); // Panggil data ulasan
   }, []);
 
   async function checkAdmin() {
@@ -53,6 +60,12 @@ export default function AdminPage() {
   async function fetchOrders() {
     const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (data) setOrders(data.filter((order) => order.status !== 'Selesai'));
+  }
+
+  // FUNGSI TARIK DATA REVIEW
+  async function fetchReviews() {
+    const { data } = await supabase.from('customer_reviews').select('*').order('created_at', { ascending: false });
+    if (data) setReviews(data);
   }
 
   async function handleAddProduct(e: React.FormEvent) {
@@ -106,16 +119,13 @@ export default function AdminPage() {
     }
   }
 
-  // ==========================================
-  // FUNGSI BARU: BUKA MODAL & SIMPAN EDIT 💾
-  // ==========================================
   function openEditModal(product: any) {
     setEditingProduct(product);
     setEditName(product.name);
     setEditDescription(product.description || '');
     setEditPrice(product.price.toString());
     setEditStock(product.stock?.toString() || '0');
-    setEditImageFile(null); // Reset file input
+    setEditImageFile(null);
   }
 
   async function handleUpdateProduct(e: React.FormEvent) {
@@ -123,7 +133,6 @@ export default function AdminPage() {
     setIsUpdating(true);
     let finalImageUrl = editingProduct.image_url;
 
-    // Jika admin muat naik gambar baru masa edit
     if (editImageFile) {
       const fileName = `${Math.random()}.${editImageFile.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, editImageFile);
@@ -153,14 +162,38 @@ export default function AdminPage() {
     setIsUpdating(false);
   }
 
+  // ==========================================
+  // FUNGSI BARU: TAMBAH & PADAM REVIEW 💬
+  // ==========================================
+  async function handleAddReview(e: React.FormEvent) {
+    e.preventDefault();
+    const { error } = await supabase.from('customer_reviews').insert([{ 
+      customer_name: reviewName, 
+      review_text: reviewText, 
+      rating: parseInt(reviewRating) 
+    }]);
+    
+    if (!error) { 
+      setReviewName(''); setReviewText(''); setReviewRating('5'); 
+      fetchReviews(); toast.success('Ulasan berjaya ditambah! 🌟'); 
+    } else {
+      toast.error('Ralat: ' + error.message);
+    }
+  }
+
+  async function handleDeleteReview(id: string) {
+    if (window.confirm('Padam ulasan ini?')) {
+      await supabase.from('customer_reviews').delete().eq('id', id);
+      fetchReviews(); toast.success('Ulasan dipadam!');
+    }
+  }
+
   if (!isAdmin) return <div className="min-h-screen flex items-center justify-center bg-[#FCFAFF]"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C084FC]"></div></div>;
 
   return (
     <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans pb-20">
       
-      {/* ========================================== */}
       {/* TETINGKAP TIMBUL (MODAL) UNTUK EDIT 🎨 */}
-      {/* ========================================== */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl relative border border-[#E9D5FF]">
@@ -301,7 +334,6 @@ export default function AdminPage() {
                       </div>
                     </div>
                     
-                    {/* BUTANG EDIT DAN PADAM */}
                     <div className="flex gap-2 w-full sm:w-auto justify-end border-t sm:border-0 border-[#E9D5FF] pt-3 sm:pt-0">
                       <button onClick={() => openEditModal(p)} className="flex items-center justify-center gap-2 bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] px-4 py-2 sm:p-3 rounded-xl transition-colors font-bold text-sm sm:text-base">
                         <Edit2 size={18} className="shrink-0"/> <span className="sm:hidden">Edit</span>
@@ -317,6 +349,56 @@ export default function AdminPage() {
           </section>
 
         </div>
+
+        {/* ========================================== */}
+        {/* SEKSYEN BARU: PENGURUSAN ULASAN PELANGGAN 💬 */}
+        {/* ========================================== */}
+        <section className="bg-white p-6 md:p-8 rounded-3xl border border-[#E9D5FF] shadow-sm">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-[#3B0764]"><MessageSquareHeart className="text-[#C084FC]"/> Ulasan Pelanggan (Testimonial)</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <form onSubmit={handleAddReview} className="space-y-4">
+              <p className="text-xs font-bold text-[#6B21A8] mb-2">Tambah Ulasan Baru (Biar nampak macam dari customer)</p>
+              <input required type="text" placeholder="Nama Pelanggan (Cth: Siti N.)" value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full border border-[#E9D5FF] p-3 rounded-xl focus:ring-2 focus:ring-[#C084FC] outline-none" />
+              
+              <textarea required placeholder="Tuliskan ulasan memuji kain... (Cth: Kain sangat lembut dan sejuk!)" value={reviewText} onChange={e => setReviewText(e.target.value)} className="w-full border border-[#E9D5FF] p-3 rounded-xl focus:ring-2 focus:ring-[#C084FC] outline-none h-24" />
+              
+              <div className="flex items-center gap-4 border border-[#E9D5FF] p-3 rounded-xl bg-[#FCFAFF]">
+                <label className="text-sm font-bold text-[#6B21A8]">Bintang:</label>
+                <select value={reviewRating} onChange={e => setReviewRating(e.target.value)} className="bg-white border border-[#E9D5FF] p-1.5 rounded-lg text-[#3B0764] font-bold focus:outline-none">
+                  <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                  <option value="4">⭐⭐⭐⭐ (4)</option>
+                  <option value="3">⭐⭐⭐ (3)</option>
+                </select>
+              </div>
+
+              <button type="submit" className="w-full bg-[#3B0764] hover:bg-[#6B21A8] text-white py-3.5 rounded-xl font-bold shadow-md transition-all mt-2">
+                Terbitkan Ulasan
+              </button>
+            </form>
+
+            <div className="lg:col-span-2 space-y-4">
+              {reviews.length === 0 ? (
+                <p className="text-[#9333EA] text-center py-5 bg-[#FCFAFF] rounded-xl border border-[#E9D5FF]">Belum ada ulasan direkodkan.</p>
+              ) : (
+                reviews.map(r => (
+                  <div key={r.id} className="flex justify-between items-start border border-[#E9D5FF] p-4 rounded-2xl bg-[#FCFAFF]">
+                    <div>
+                      <p className="font-bold text-[#3B0764] flex items-center gap-2">
+                        {r.customer_name} <span className="text-xs text-[#A855F7]">({'⭐'.repeat(r.rating)})</span>
+                      </p>
+                      <p className="text-sm font-medium text-[#6B21A8] mt-1">"{r.review_text}"</p>
+                    </div>
+                    <button onClick={() => handleDeleteReview(r.id)} className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors shrink-0">
+                      <Trash2 size={18}/>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   );

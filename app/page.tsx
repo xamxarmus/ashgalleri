@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield, SlidersHorizontal, ZoomIn, X, Info } from 'lucide-react';
+import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield, SlidersHorizontal, ZoomIn, X, Info, Quote } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -13,15 +13,16 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
-
   const [sortBy, setSortBy] = useState('latest');
-  
-  // STATE INI KINI DIGUNAKAN UNTUK PAPARAN PERINCIAN PENUH (QUICK VIEW)
   const [zoomedProduct, setZoomedProduct] = useState<any>(null);
+
+  // STATE BARU UNTUK REVIEW
+  const [reviews, setReviews] = useState<any[]>([]);
 
   useEffect(() => {
     checkUser();
     fetchProducts();
+    fetchReviews(); // Panggil ulasan
   }, []);
 
   async function checkUser() {
@@ -33,6 +34,12 @@ export default function HomePage() {
     const { data } = await supabase.from('products').select('*');
     if (data) setProducts(data);
     setLoading(false);
+  }
+
+  // FUNGSI TARIK REVIEW DARI SUPABASE
+  async function fetchReviews() {
+    const { data } = await supabase.from('customer_reviews').select('*').order('created_at', { ascending: false });
+    if (data) setReviews(data);
   }
 
   const sortedProducts = [...products].sort((a, b) => {
@@ -59,71 +66,66 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth">
+    <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth overflow-x-hidden">
       
       {/* ========================================================= */}
-      {/* TETINGKAP PERINCIAN PENUH PRODUK (QUICK VIEW MODAL) 🔍✨ */}
+      {/* CSS KHAS UNTUK ANIMASI RUNNING TEXT (MARQUEE) 🏃‍♂️💨 */}
       {/* ========================================================= */}
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(calc(-50% - 1rem)); } 
+        }
+        .animate-scroll {
+          display: flex;
+          width: max-content;
+          animation: scroll 30s linear infinite;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      {/* TETINGKAP PERINCIAN PENUH PRODUK (QUICK VIEW MODAL) 🔍✨ */}
       {zoomedProduct && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 transition-all" onClick={() => setZoomedProduct(null)}>
-          
           <div className="bg-white w-full max-w-5xl max-h-[95vh] rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            
-            {/* Butang Tutup X */}
-            <button onClick={() => setZoomedProduct(null)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 p-2.5 rounded-full transition-colors z-50 shadow-sm">
-              <X size={20} />
-            </button>
+            <button onClick={() => setZoomedProduct(null)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 p-2.5 rounded-full transition-colors z-50 shadow-sm"><X size={20} /></button>
 
-            {/* Bahagian Kiri: Gambar (Boleh Leret) */}
             <div className="w-full md:w-1/2 h-[40vh] md:h-auto bg-[#F3E8FF] relative flex overflow-x-auto snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <img src={zoomedProduct.image_url || 'https://via.placeholder.com/400'} alt={zoomedProduct.name} className="w-full h-full object-cover shrink-0 snap-center" />
               {zoomedProduct.image_url_2 && (
                 <img src={zoomedProduct.image_url_2} alt={zoomedProduct.name + " 2"} className="w-full h-full object-cover shrink-0 snap-center" />
               )}
-              
               {zoomedProduct.image_url_2 && (
                 <div className="absolute bottom-6 left-0 right-0 text-center pointer-events-none">
-                  <span className="bg-black/60 text-white/95 text-xs font-semibold px-4 py-2 rounded-full backdrop-blur-md animate-pulse shadow-md">
-                    Leret untuk gambar seterusnya 👉
-                  </span>
+                  <span className="bg-black/60 text-white/95 text-xs font-semibold px-4 py-2 rounded-full backdrop-blur-md animate-pulse shadow-md">Leret untuk gambar seterusnya 👉</span>
                 </div>
               )}
             </div>
 
-            {/* Bahagian Kanan: Maklumat & Perincian Penuh */}
             <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto bg-white">
               <div className="mb-3">
                 <span className="bg-[#F3E8FF] text-[#9333EA] text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center w-max gap-1">
                   <Star size={12} className="fill-[#D946EF] text-[#D946EF]"/> Koleksi Premium
                 </span>
               </div>
-              
               <h2 className="text-3xl font-serif font-bold text-[#3B0764] mb-2 leading-tight">{zoomedProduct.name}</h2>
               <p className="text-3xl font-bold text-[#A855F7] mb-6">RM {Number(zoomedProduct.price).toFixed(2)}</p>
               
               <div className="mb-8 flex-1 bg-[#FCFAFF] p-5 rounded-2xl border border-[#E9D5FF]">
-                <h3 className="font-bold text-[#6B21A8] mb-3 border-b border-[#E9D5FF] pb-2 flex items-center gap-2">
-                  <Info size={18}/> Perincian Produk:
-                </h3>
-                {/* Paparan Teks Penuh Tanpa Potong */}
+                <h3 className="font-bold text-[#6B21A8] mb-3 border-b border-[#E9D5FF] pb-2 flex items-center gap-2"><Info size={18}/> Perincian Produk:</h3>
                 <p className="text-[#3B0764] text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
                   {zoomedProduct.description || 'Tiada penerangan disediakan untuk koleksi ini.'}
                 </p>
-                
-                {/* Paparan Baki Stok */}
                 <div className="mt-6 pt-4 border-t border-[#E9D5FF] flex items-center justify-between">
                   <p className="text-sm font-bold text-[#9333EA]">Status Stok:</p>
-                  <p className="text-sm font-bold bg-[#E9D5FF] text-[#6B21A8] px-3 py-1 rounded-lg">
-                    Tinggal {zoomedProduct.stock || 0} unit
-                  </p>
+                  <p className="text-sm font-bold bg-[#E9D5FF] text-[#6B21A8] px-3 py-1 rounded-lg">Tinggal {zoomedProduct.stock || 0} unit</p>
                 </div>
               </div>
 
               <button 
-                onClick={() => {
-                  handleAddToCart(zoomedProduct);
-                  setZoomedProduct(null); // Tutup tetingkap selepas berjaya masuk troli
-                }} 
+                onClick={() => { handleAddToCart(zoomedProduct); setZoomedProduct(null); }} 
                 disabled={addingToCart === zoomedProduct.id} 
                 className="w-full bg-[#3B0764] hover:bg-[#6B21A8] text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
               >
@@ -218,7 +220,6 @@ export default function HomePage() {
                 onClick={() => setZoomedProduct(product)} 
                 className="bg-white rounded-2xl border border-[#E9D5FF] overflow-hidden group hover:shadow-xl transition-all duration-300 relative flex flex-col cursor-pointer"
               >
-                
                 <div className="relative aspect-[4/5] bg-[#F3E8FF] overflow-hidden group/slider">
                   <div className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     <img src={product.image_url || 'https://via.placeholder.com/400'} alt={product.name} className="w-full h-full object-cover shrink-0 snap-center transition-transform duration-500 group-hover:scale-105" />
@@ -226,16 +227,12 @@ export default function HomePage() {
                       <img src={product.image_url_2} alt={product.name + ' 2'} className="w-full h-full object-cover shrink-0 snap-center transition-transform duration-500 group-hover:scale-105" />
                     )}
                   </div>
-
                   <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#6B21A8] z-10 pointer-events-none shadow-sm">
                     <Star size={10} className="fill-[#D946EF] text-[#D946EF]"/> Premium
                   </div>
-
-                  {/* Icon Info untuk maklumkan boleh ditekan */}
                   <div className="absolute top-3 right-3 bg-white/90 p-2 rounded-full text-[#6B21A8] shadow-sm z-20 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 flex items-center gap-1 text-xs font-bold">
                     <Info size={14} /> Lihat Detail
                   </div>
-
                   {product.image_url_2 && (
                     <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
                       <div className="w-1.5 h-1.5 rounded-full bg-white/90 shadow-sm"></div>
@@ -256,13 +253,9 @@ export default function HomePage() {
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#E9D5FF]">
                     <span className="font-bold text-xl text-[#A855F7]">RM {Number(product.price).toFixed(2)}</span>
                     <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); // Elak dari buka modal bila tekan troli
-                        handleAddToCart(product); 
-                      }} 
+                      onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }} 
                       disabled={addingToCart === product.id} 
                       className="bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] p-2.5 rounded-xl transition-colors disabled:opacity-50 z-20 relative shadow-sm"
-                      title="Terus Masuk Troli"
                     >
                       <ShoppingBag size={18} />
                     </button>
@@ -274,8 +267,42 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* ========================================================= */}
+      {/* SEKSYEN BARU: RUNNING TEXT CUSTOMER REVIEW 💬🏃‍♂️ */}
+      {/* ========================================================= */}
+      {reviews.length > 0 && (
+        <section className="py-12 bg-white border-y border-[#E9D5FF] overflow-hidden relative">
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-white to-transparent z-10"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-white to-transparent z-10"></div>
+          
+          <div className="max-w-6xl mx-auto px-5 mb-8 text-center">
+            <h2 className="text-2xl font-serif font-bold text-[#3B0764]">Apa Kata Pelanggan Kami?</h2>
+            <p className="text-[#9333EA] text-sm mt-1">Jadilah salah seorang pelanggan kami yang gembira!</p>
+          </div>
+
+          <div className="flex gap-6 animate-scroll pl-6 hover:cursor-grab active:cursor-grabbing">
+            {/* Gandakan array review supaya running text sentiasa bersambung cantik tanpa putus */}
+            {[...reviews, ...reviews, ...reviews].map((r, i) => (
+              <div key={i} className="w-[300px] shrink-0 bg-[#FCFAFF] p-6 rounded-2xl border border-[#E9D5FF] shadow-sm hover:shadow-md transition-shadow">
+                <Quote className="text-[#E9D5FF] mb-3" size={28}/>
+                <p className="text-[#3B0764] text-sm font-medium italic mb-4 line-clamp-4">"{r.review_text}"</p>
+                <div className="flex items-center gap-3 border-t border-[#E9D5FF] pt-4">
+                  <div className="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center text-[#9333EA] font-bold text-lg">
+                    {r.customer_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-[#3B0764] font-bold text-sm">{r.customer_name}</p>
+                    <p className="text-xs text-[#A855F7] tracking-widest">{'⭐'.repeat(r.rating)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* LOKASI BUTIK */}
-      <section className="max-w-6xl mx-auto px-5 pb-16">
+      <section className="max-w-6xl mx-auto px-5 py-16">
         <div className="bg-[#F3E8FF] p-8 md:p-10 rounded-3xl border border-[#E9D5FF] flex flex-col md:flex-row gap-8 justify-between items-center shadow-sm">
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-2xl font-serif font-bold text-[#3B0764] mb-3">Kunjungi Butik Kami</h3>
