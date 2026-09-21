@@ -251,7 +251,7 @@ export default function AdminPage() {
                   <div key={p.id} className="flex items-center justify-between p-3 border border-[#E9D5FF] rounded-xl hover:bg-[#FCFAFF] transition-colors">
                     <div className="flex items-center gap-4">
                       <img src={p.image_url} className="w-14 h-14 rounded-lg object-cover bg-white border border-[#E9D5FF]" />
-                      <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock}m {p.image_url_2 && " | (2 Gambar)"}</p></div>
+                      <div><h4 className="font-semibold text-sm text-[#3B0764]">{p.name}</h4><p className="text-xs text-[#9333EA]">RM {Number(p.price).toFixed(2)} | Stok: {p.stock} {p.image_url_2 && " | (2 Gambar)"}</p></div>
                     </div>
                     <button onClick={() => handleDelete(p)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={18}/></button>
                   </div>
