@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield, SlidersHorizontal, ZoomIn, X } from 'lucide-react';
+import { ShoppingBag, User, ArrowRight, Star, MapPin, Clock, Shield, SlidersHorizontal, ZoomIn, X, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -15,6 +15,8 @@ export default function HomePage() {
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState('latest');
+  
+  // STATE INI KINI DIGUNAKAN UNTUK PAPARAN PERINCIAN PENUH (QUICK VIEW)
   const [zoomedProduct, setZoomedProduct] = useState<any>(null);
 
   useEffect(() => {
@@ -58,29 +60,81 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FCFAFF] text-[#2E1065] font-sans scroll-smooth">
+      
+      {/* ========================================================= */}
+      {/* TETINGKAP PERINCIAN PENUH PRODUK (QUICK VIEW MODAL) 🔍✨ */}
+      {/* ========================================================= */}
       {zoomedProduct && (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 transition-all opacity-100" onClick={() => setZoomedProduct(null)}>
-          <button onClick={() => setZoomedProduct(null)} className="absolute top-6 right-6 text-white hover:text-[#C084FC] bg-white/10 p-2 rounded-full transition-colors z-50">
-            <X size={28} />
-          </button>
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 transition-all" onClick={() => setZoomedProduct(null)}>
           
-          <div className="w-full max-w-5xl h-[85vh] flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" onClick={e => e.stopPropagation()}>
-            <img src={zoomedProduct.image_url} alt={zoomedProduct.name} className="w-full h-full object-contain shrink-0 snap-center rounded-lg" />
-            {zoomedProduct.image_url_2 && (
-              <img src={zoomedProduct.image_url_2} alt={zoomedProduct.name + " 2"} className="w-full h-full object-contain shrink-0 snap-center rounded-lg" />
-            )}
-          </div>
-          
-          {zoomedProduct.image_url_2 && (
-            <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-              <span className="bg-black/50 text-white/90 text-sm px-4 py-2 rounded-full backdrop-blur-md animate-pulse">
-                Leret untuk gambar seterusnya 👉
-              </span>
+          <div className="bg-white w-full max-w-5xl max-h-[95vh] rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            
+            {/* Butang Tutup X */}
+            <button onClick={() => setZoomedProduct(null)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 p-2.5 rounded-full transition-colors z-50 shadow-sm">
+              <X size={20} />
+            </button>
+
+            {/* Bahagian Kiri: Gambar (Boleh Leret) */}
+            <div className="w-full md:w-1/2 h-[40vh] md:h-auto bg-[#F3E8FF] relative flex overflow-x-auto snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <img src={zoomedProduct.image_url || 'https://via.placeholder.com/400'} alt={zoomedProduct.name} className="w-full h-full object-cover shrink-0 snap-center" />
+              {zoomedProduct.image_url_2 && (
+                <img src={zoomedProduct.image_url_2} alt={zoomedProduct.name + " 2"} className="w-full h-full object-cover shrink-0 snap-center" />
+              )}
+              
+              {zoomedProduct.image_url_2 && (
+                <div className="absolute bottom-6 left-0 right-0 text-center pointer-events-none">
+                  <span className="bg-black/60 text-white/95 text-xs font-semibold px-4 py-2 rounded-full backdrop-blur-md animate-pulse shadow-md">
+                    Leret untuk gambar seterusnya 👉
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Bahagian Kanan: Maklumat & Perincian Penuh */}
+            <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto bg-white">
+              <div className="mb-3">
+                <span className="bg-[#F3E8FF] text-[#9333EA] text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center w-max gap-1">
+                  <Star size={12} className="fill-[#D946EF] text-[#D946EF]"/> Koleksi Premium
+                </span>
+              </div>
+              
+              <h2 className="text-3xl font-serif font-bold text-[#3B0764] mb-2 leading-tight">{zoomedProduct.name}</h2>
+              <p className="text-3xl font-bold text-[#A855F7] mb-6">RM {Number(zoomedProduct.price).toFixed(2)}</p>
+              
+              <div className="mb-8 flex-1 bg-[#FCFAFF] p-5 rounded-2xl border border-[#E9D5FF]">
+                <h3 className="font-bold text-[#6B21A8] mb-3 border-b border-[#E9D5FF] pb-2 flex items-center gap-2">
+                  <Info size={18}/> Perincian Produk:
+                </h3>
+                {/* Paparan Teks Penuh Tanpa Potong */}
+                <p className="text-[#3B0764] text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
+                  {zoomedProduct.description || 'Tiada penerangan disediakan untuk koleksi ini.'}
+                </p>
+                
+                {/* Paparan Baki Stok */}
+                <div className="mt-6 pt-4 border-t border-[#E9D5FF] flex items-center justify-between">
+                  <p className="text-sm font-bold text-[#9333EA]">Status Stok:</p>
+                  <p className="text-sm font-bold bg-[#E9D5FF] text-[#6B21A8] px-3 py-1 rounded-lg">
+                    Tinggal {zoomedProduct.stock || 0} unit
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  handleAddToCart(zoomedProduct);
+                  setZoomedProduct(null); // Tutup tetingkap selepas berjaya masuk troli
+                }} 
+                disabled={addingToCart === zoomedProduct.id} 
+                className="w-full bg-[#3B0764] hover:bg-[#6B21A8] text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                <ShoppingBag size={24} /> {addingToCart === zoomedProduct.id ? 'Memasukkan...' : 'Masukkan ke Troli Saku'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* HEADER UTAMA */}
       <header className="bg-white border-b border-[#E9D5FF] sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center group">
@@ -106,6 +160,7 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* HERO SECTION */}
       <section className="relative min-h-[85vh] flex flex-col justify-end bg-[#3B0764]">
         <div className="absolute inset-0 z-0">
           <img src="/hero-bg.jpg" alt="Latar Belakang Koleksi Ash Galleri" className="w-full h-full object-cover opacity-90" />
@@ -129,6 +184,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* KOLEKSI PRODUK */}
       <section id="koleksi" className="max-w-6xl mx-auto px-5 py-20">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 border-b border-[#E9D5FF] pb-6 gap-4">
           <div className="text-left">
@@ -157,9 +213,13 @@ export default function HomePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
             {sortedProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl border border-[#E9D5FF] overflow-hidden group hover:shadow-xl transition-all duration-300 relative flex flex-col">
+              <div 
+                key={product.id} 
+                onClick={() => setZoomedProduct(product)} 
+                className="bg-white rounded-2xl border border-[#E9D5FF] overflow-hidden group hover:shadow-xl transition-all duration-300 relative flex flex-col cursor-pointer"
+              >
                 
-                <div className="relative aspect-[4/5] bg-[#F3E8FF] overflow-hidden group/slider cursor-pointer">
+                <div className="relative aspect-[4/5] bg-[#F3E8FF] overflow-hidden group/slider">
                   <div className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     <img src={product.image_url || 'https://via.placeholder.com/400'} alt={product.name} className="w-full h-full object-cover shrink-0 snap-center transition-transform duration-500 group-hover:scale-105" />
                     {product.image_url_2 && (
@@ -167,17 +227,14 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#6B21A8] z-10 pointer-events-none">
+                  <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold text-[#6B21A8] z-10 pointer-events-none shadow-sm">
                     <Star size={10} className="fill-[#D946EF] text-[#D946EF]"/> Premium
                   </div>
 
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setZoomedProduct(product); }}
-                    className="absolute top-3 right-3 bg-white/90 p-2 rounded-full text-[#6B21A8] hover:text-[#A855F7] hover:bg-white shadow-sm z-20 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
-                    title="Besarkan Gambar"
-                  >
-                    <ZoomIn size={16} />
-                  </button>
+                  {/* Icon Info untuk maklumkan boleh ditekan */}
+                  <div className="absolute top-3 right-3 bg-white/90 p-2 rounded-full text-[#6B21A8] shadow-sm z-20 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 flex items-center gap-1 text-xs font-bold">
+                    <Info size={14} /> Lihat Detail
+                  </div>
 
                   {product.image_url_2 && (
                     <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
@@ -193,11 +250,20 @@ export default function HomePage() {
                 </div>
                 
                 <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="font-bold text-[#3B0764] text-lg mb-1 line-clamp-1" title={product.name}>{product.name}</h3>
-                  <p className="text-[#9333EA] text-xs mb-3 line-clamp-2 min-h-[2rem] flex-1" title={product.description}>{product.description}</p>
+                  <h3 className="font-bold text-[#3B0764] text-lg mb-1 line-clamp-1">{product.name}</h3>
+                  <p className="text-[#9333EA] text-xs mb-3 line-clamp-2 min-h-[2rem] flex-1">{product.description}</p>
+                  
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#E9D5FF]">
                     <span className="font-bold text-xl text-[#A855F7]">RM {Number(product.price).toFixed(2)}</span>
-                    <button onClick={() => handleAddToCart(product)} disabled={addingToCart === product.id} className="bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] p-2.5 rounded-xl transition-colors disabled:opacity-50 z-20 relative shadow-sm">
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); // Elak dari buka modal bila tekan troli
+                        handleAddToCart(product); 
+                      }} 
+                      disabled={addingToCart === product.id} 
+                      className="bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] p-2.5 rounded-xl transition-colors disabled:opacity-50 z-20 relative shadow-sm"
+                      title="Terus Masuk Troli"
+                    >
                       <ShoppingBag size={18} />
                     </button>
                   </div>
@@ -208,13 +274,13 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* LOKASI BUTIK */}
       <section className="max-w-6xl mx-auto px-5 pb-16">
         <div className="bg-[#F3E8FF] p-8 md:p-10 rounded-3xl border border-[#E9D5FF] flex flex-col md:flex-row gap-8 justify-between items-center shadow-sm">
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-2xl font-serif font-bold text-[#3B0764] mb-3">Kunjungi Butik Kami</h3>
             <p className="text-[#6B21A8] mb-5 text-sm md:text-base max-w-md">Singgah ke butik fizikal kami untuk melihat dan merasai sendiri kualiti fabrik secara dekat.</p>
             
-            {/* INI BAHAGIAN KOORDINAT GPS YANG BARU 📍 */}
             <a href="https://maps.google.com/?q=6°07'11.1%22N+102°11'59.2%22E" target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#E9D5FF] hover:border-[#C084FC] hover:shadow-md transition-all group cursor-pointer text-left">
               <MapPin className="text-[#C084FC] shrink-0 mt-1 group-hover:text-[#A855F7] transition-colors" size={28} />
               <div>
@@ -235,6 +301,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* FOOTER */}
       <footer className="bg-white border-t border-[#E9D5FF] py-10">
         <div className="max-w-6xl mx-auto px-5 text-center flex flex-col items-center">
           <span className="font-serif font-bold text-3xl text-[#3B0764] mb-4 tracking-wider">Ash Galleri</span>
